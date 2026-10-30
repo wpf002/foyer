@@ -1,14 +1,27 @@
-import type { DimensionKey } from '@foyer/rubric';
+import type { BriefEntry, CheckFailure, Critique, Judgement, RawAnswer, RoomInput } from '@foyer/rubric';
 
-export interface GoldenCase {
+/** Coverage tags the golden-set README requires. */
+export type CaseTag = 'leave-alone' | 'load-bearing' | 'permit' | 'small-budget' | 'renter';
+
+export interface CaseMeta {
   id: string;
-  dir: string;
-  brief: { questionId: string; prompt: string; raw: string }[];
-  room: { type: string; widthIn?: number; lengthIn?: number; ceilingIn?: number };
+  /** Synthetic cases run but never count toward the gate. */
+  source: 'real' | 'synthetic';
+  tags: CaseTag[];
 }
 
-export interface JudgeResult {
+export interface GoldenCase {
+  meta: CaseMeta;
+  dir: string;
+  brief: RawAnswer[];
+  room: RoomInput;
+}
+
+export interface CaseResult {
   caseId: string;
-  scores: Record<DimensionKey, { score: number; reason: string }>;
-  failures: string[];
+  source: CaseMeta['source'];
+  brief: BriefEntry[];
+  critique: Critique;
+  checks: CheckFailure[];
+  judgement: Judgement;
 }

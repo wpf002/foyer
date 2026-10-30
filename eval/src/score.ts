@@ -1,5 +1,5 @@
 import { FLOOR_PER_DIMENSION, PASS_THRESHOLD, SCORING_DIMENSIONS } from '@foyer/rubric';
-import type { JudgeResult } from './types';
+import type { CaseResult } from './types';
 
 export interface RunSummary {
   mean: number;
@@ -8,12 +8,12 @@ export interface RunSummary {
   blockers: string[];
 }
 
-export function summarize(results: JudgeResult[]): RunSummary {
+export function summarize(results: CaseResult[]): RunSummary {
   const perDimension: Record<string, number> = {};
   const blockers: string[] = [];
 
   for (const d of SCORING_DIMENSIONS) {
-    const vals = results.map((r) => r.scores[d.key]?.score ?? 0);
+    const vals = results.map((r) => r.judgement.scores[d.key].score);
     const mean = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
     perDimension[d.key] = Number(mean.toFixed(2));
 

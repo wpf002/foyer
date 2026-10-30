@@ -40,7 +40,7 @@ written into `packages/rubric/src/prompts.ts` and enforced by the judge's safety
 | Web | Next.js 15 App Router, React 19, Tailwind CSS v4 |
 | API | Fastify 5 |
 | Data | Prisma 6, Postgres |
-| AI | All calls route through Flint. No provider key lives in this repo. |
+| AI | Claude via `@anthropic-ai/sdk`, server-side only. |
 
 ## Layout
 
@@ -48,7 +48,7 @@ written into `packages/rubric/src/prompts.ts` and enforced by the judge's safety
 apps/web         Next.js app. Intake, brief, rooms, recommendations, roadmap, costs, artifacts.
 apps/api         Fastify. Health and cost endpoints today.
 packages/db      Prisma schema and client. The invariants live here.
-packages/ai      Flint gateway, model tiering, spend ledger.
+packages/ai      Claude client, model tiering, spend ledger.
 packages/rubric  Design rubric, problem vocabulary, critique and judge prompts.
 packages/cost    Baseline unit costs, zip3 region factors, range estimates.
 packages/ui      Design tokens and primitives.
@@ -79,9 +79,7 @@ the critique chain, so every screen works without a database.
 Copy `.env.example` to `.env`. Two things to know:
 
 - `DATABASE_URL` points at Postgres. Nothing else needs a connection string.
-- There is no `ANTHROPIC_API_KEY` in this repo and there should never be one. Model access goes
-  through `FLINT_BASE_URL` and `FLINT_API_KEY`. If you find yourself adding a provider key,
-  something upstream is wrong.
+- `ANTHROPIC_API_KEY` is read only by `packages/ai`. It never goes in `apps/web` or a `NEXT_PUBLIC_` var.
 
 Model tiering is configured by task, not globally. Intake parsing and classification use the cheap
 model. Design critique and sequencing use the reasoning model. Photo analysis uses vision. The

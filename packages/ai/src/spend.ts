@@ -21,6 +21,7 @@ const num = (v: string | undefined, d: number) => {
 
 export class SpendLedger {
   private byUser = new Map<string, number>();
+  private userCaps = new Map<string, number>();
   private global = 0;
 
   constructor(
@@ -28,9 +29,15 @@ export class SpendLedger {
     private globalCapUsd = num(process.env.FOYER_SPEND_CAP_GLOBAL_USD, 250),
   ) {}
 
+  /** Override the per-user cap for one id, e.g. the eval runner's budget. */
+  setUserCap(userId: string, capUsd: number): void {
+    this.userCaps.set(userId, capUsd);
+  }
+
   assertHeadroom(userId: string, estimateUsd: number): void {
+    const cap = this.userCaps.get(userId) ?? this.userCapUsd;
     const user = (this.byUser.get(userId) ?? 0) + estimateUsd;
-    if (user > this.userCapUsd) throw new SpendCapExceeded('user', user, this.userCapUsd);
+    if (user > cap) throw new SpendCapExceeded('user', user, cap);
     const global = this.global + estimateUsd;
     if (global > this.globalCapUsd) throw new SpendCapExceeded('global', global, this.globalCapUsd);
   }

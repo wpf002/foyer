@@ -1,0 +1,10 @@
+{
+  "name": "Kitchen",
+  "type": "Galley",
+  "widthIn": 100,
+  "lengthIn": 162,
+  "ceilingIn": 96,
+  "fixed": ["Window at sink wall", "Sewer stack, NE corner", "Gas line at range", "Wall shared with dining room, load path unconfirmed"],
+  "movable": ["Fridge", "Base cabinets", "Counter", "Pendant", "Dining table"],
+  "description": "Galley kitchen, 1948 ranch. Cabinets run both long walls with a 38-inch aisle. Fridge sits at the dining end and its door swings into the only walkway. One pendant centered on the ceiling, no under-cabinet light. The 32-inch doorway to the dining room is in the shared wall. Laminate counters, painted flat-panel cabinets from a 1990s refresh, original oak floor continues from the living room."
+}
