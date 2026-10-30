@@ -1,0 +1,74 @@
+/* ---------------------------------------------------------------------------
+   Foyer tokens.
+
+   Read off the materials Foyer actually specifies: limewashed plaster, white
+   oak, unbleached linen, fired clay, aged brass, oiled walnut. Warm neutrals
+   carry the page; clay is the single accent on primary actions and the active
+   item; olive marks a human review; brass marks money; rust marks a stop.
+
+   One palette. Finishes cannot be judged on a dark ground, and the handoff
+   documents print.
+
+   Every text pair clears 4.5:1 on its own background. Large display text and
+   UI boundaries clear 3:1.
+   --------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light;
+
+  /* Grounds ------------------------------------------------------------- */
+  --canvas: #f5f1e9;
+  --surface: #fffdf8;
+  --sunken: #ece5d9;
+  --espresso: #2a231d;
+  --espresso-soft: #3a3129;
+
+  --line: #e0d8c9;
+  --line-strong: #bfb39c;
+
+  /* Ink ----------------------------------------------------------------- */
+  --ink: #221d18;
+  --ink-muted: #665c4e;
+  --ink-faint: #8d8271;
+  --ink-inverse: #f7f2e8;
+  --ink-inverse-muted: #c2b7a4;
+
+  /* Clay — the one accent ------------------------------------------------ */
+  --clay: #b04e28;
+  --clay-hover: #94401f;
+  --clay-fg: #fffdf8;
+  --clay-soft: #f4e3d9;
+  --clay-ink: #7d3317;
+
+  /* Supporting ----------------------------------------------------------- */
+  --olive: #55634a;
+  --olive-soft: #e5e9df;
+  --brass: #8a6a2c;
+  --brass-soft: #f2e9d3;
+  --danger: #95271c;
+  --danger-soft: #f7e3df;
+
+  /* Material base colours, used by the finish surfaces below -------------- */
+  --m-plaster: #e9e2d4;
+  --m-oak: #caa871;
+  --m-linen: #ded5c2;
+  --m-terracotta: #b05a38;
+  --m-brass: #a9873f;
+  --m-walnut: #54402e;
+
+  /* Depth — warm, never neutral grey -------------------------------------- */
+  --shadow-sm: 0 1px 2px rgb(58 42 28 / 0.05), 0 1px 3px rgb(58 42 28 / 0.04);
+  --shadow-md:
+    0 1px 2px rgb(58 42 28 / 0.04), 0 6px 16px -4px rgb(58 42 28 / 0.1);
+  --shadow-lg:
+    0 2px 4px rgb(58 42 28 / 0.04), 0 18px 40px -12px rgb(58 42 28 / 0.18);
+
+  --grain: rgb(34 29 24 / 0.038);
+  --focus: var(--clay);
+
+  --r-xs: 4px;
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 22px;
+  --r-xl: 32px;
+}

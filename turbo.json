@@ -1,0 +1,22 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [".env", "tsconfig.base.json"],
+  "globalEnv": [
+    "NODE_ENV",
+    "DATABASE_URL",
+    "FLINT_BASE_URL",
+    "FLINT_API_KEY",
+    "FOYER_SPEND_CAP_USER_USD",
+    "FOYER_SPEND_CAP_GLOBAL_USD"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    },
+    "typecheck": { "dependsOn": ["^build"] },
+    "lint": {},
+    "dev": { "cache": false, "persistent": true },
+    "eval": { "cache": false }
+  }
+}

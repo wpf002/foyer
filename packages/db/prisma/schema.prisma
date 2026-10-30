@@ -1,0 +1,430 @@
+// Foyer data model.
+//
+// Two invariants are load-bearing and enforced here, not by convention:
+//   1. Every Recommendation points at the BriefAnswer that justifies it
+//      (Recommendation.briefAnswerId is required). No orphan advice.
+//   2. Every Render points at the Recommendation it illustrates
+//      (Render.recommendationId is required). No orphan images.
+// Both are required scalar FKs, so a write that skips the link fails at the
+// database, not in a code review.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Accounts
+// ---------------------------------------------------------------------------
+
+enum UserKind {
+  HOMEOWNER
+  AGENT
+  STAGER
+  CONTRACTOR
+  DESIGNER
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String?
+  kind      UserKind   @default(HOMEOWNER)
+  zip       String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  projects  Project[]
+}
+
+// ---------------------------------------------------------------------------
+// Project — the persistent file everything hangs off
+// ---------------------------------------------------------------------------
+
+enum ProjectStatus {
+  INTAKE
+  ANALYZING
+  BRIEF_READY
+  IN_PROGRESS
+  ARCHIVED
+}
+
+model Project {
+  id              String        @id @default(cuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  zip             String
+  status          ProjectStatus @default(INTAKE)
+  budgetLowCents  Int?
+  budgetHighCents Int?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  brief           Brief?
+  rooms           Room[]
+  recommendations Recommendation[]
+  roadmapItems    RoadmapItem[]
+  artifacts       Artifact[]
+
+  @@index([userId, updatedAt])
+  @@index([zip])
+}
+
+// ---------------------------------------------------------------------------
+// Brief — the 15-question intake, 1:1 with Project
+// ---------------------------------------------------------------------------
+
+enum BriefSection {
+  SPACE
+  LIFE
+  AESTHETIC
+  CONSTRAINTS
+}
+
+model Brief {
+  id          String        @id @default(cuid())
+  projectId   String        @unique
+  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  completedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  answers     BriefAnswer[]
+}
+
+/// One of the 15 intake answers. `raw` is what the user typed or picked;
+/// `parsed` is the cheap model's structured read of it. Recommendations cite
+/// these rows by id, which is what makes a brief traceable.
+model BriefAnswer {
+  id         String       @id @default(cuid())
+  briefId    String
+  brief      Brief        @relation(fields: [briefId], references: [id], onDelete: Cascade)
+  questionId String
+  section    BriefSection
+  prompt     String
+  raw        String
+  parsed     Json?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  recommendations Recommendation[]
+
+  @@unique([briefId, questionId])
+  @@index([briefId, section])
+}
+
+// ---------------------------------------------------------------------------
+// Rooms and photos
+// ---------------------------------------------------------------------------
+
+enum RoomType {
+  KITCHEN
+  BATHROOM
+  LIVING
+  DINING
+  BEDROOM
+  ENTRY
+  OFFICE
+  BASEMENT
+  OUTDOOR
+  OTHER
+}
+
+model Room {
+  id             String   @id @default(cuid())
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name           String
+  type           RoomType
+  widthIn        Int?
+  lengthIn       Int?
+  ceilingIn      Int?
+  /// Captured by LiDAR scan rather than typed or guessed from a photo.
+  dimsFromScan   Boolean  @default(false)
+  /// Fixed vs. movable separation from the vision pass. Gates every
+  /// structural recommendation downstream, so it is stored, not inferred.
+  fixedElements  Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  photos          Photo[]
+  recommendations Recommendation[]
+
+  @@index([projectId])
+}
+
+enum PhotoAngle {
+  WIDE
+  CORNER
+  DETAIL
+  CEILING
+  FLOOR
+  UNKNOWN
+}
+
+model Photo {
+  id           String     @id @default(cuid())
+  roomId       String
+  room         Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  url          String
+  angle        PhotoAngle @default(UNKNOWN)
+  /// Structured output of the vision pass: room read, proportions, existing
+  /// finishes, style, and the fixed/movable split. Null until analyzed.
+  analysis     Json?
+  analyzedAt   DateTime?
+  createdAt    DateTime   @default(now())
+
+  @@index([roomId])
+}
+
+// ---------------------------------------------------------------------------
+// Recommendations — must cite a BriefAnswer
+// ---------------------------------------------------------------------------
+
+enum RecommendationCategory {
+  STRUCTURAL
+  COSMETIC
+  FUNCTIONAL
+  ATMOSPHERIC
+}
+
+enum EffortLevel {
+  WEEKEND
+  WEEK
+  MULTI_WEEK
+}
+
+model Recommendation {
+  id        String                 @id @default(cuid())
+  projectId String
+  project   Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  roomId    String?
+  room      Room?                  @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  /// INVARIANT: required. Every recommendation traces to the intake answer
+  /// that justifies it.
+  briefAnswerId String
+  briefAnswer   BriefAnswer @relation(fields: [briefAnswerId], references: [id], onDelete: Restrict)
+
+  category   RecommendationCategory
+  title      String
+  rationale  String
+  /// What not to change, and why. A designer's restraint is part of the output.
+  preserve   String?
+  effort     EffortLevel
+  priority   Int                    @default(0)
+  /// Set when the item touches structure or safety. Routes the item to
+  /// "confirm with a licensed professional" and blocks any definitive claim.
+  needsProReview Boolean            @default(false)
+  createdAt  DateTime               @default(now())
+  updatedAt  DateTime               @updatedAt
+
+  costEstimate CostEstimate?
+  renders      Render[]
+  roadmapItems RoadmapItem[]
+
+  @@index([projectId, priority])
+  @@index([briefAnswerId])
+}
+
+// ---------------------------------------------------------------------------
+// Cost
+// ---------------------------------------------------------------------------
+
+enum CostSource {
+  BASELINE_HOMEWYSE
+  BASELINE_RSMEANS
+  BASELINE_STATIC
+  FOYER_FLYWHEEL
+  USER_QUOTE
+}
+
+/// Always a range. Never a point estimate.
+model CostEstimate {
+  id               String     @id @default(cuid())
+  recommendationId String     @unique
+  recommendation   Recommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+  lowCents         Int
+  midCents         Int
+  highCents        Int
+  zip              String
+  source           CostSource
+  /// Regional multiplier applied to the national baseline for this zip.
+  regionFactor     Float      @default(1.0)
+  /// Set once a real quote or invoice comes back. Feeds the flywheel.
+  actualCents      Int?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  @@index([zip, source])
+}
+
+/// The flywheel table. Worthless at n=50. The asset at n=50,000.
+/// Written on every project, whether or not anyone looks at it yet.
+model CostDataPoint {
+  id            String     @id @default(cuid())
+  zip           String
+  workType      String
+  quotedCents   Int?
+  actualCents   Int?
+  baselineCents Int
+  source        CostSource
+  unit          String?
+  quantity      Float?
+  observedAt    DateTime   @default(now())
+  createdAt     DateTime   @default(now())
+
+  @@index([zip, workType, observedAt])
+  @@index([workType])
+}
+
+// ---------------------------------------------------------------------------
+// Roadmap — phases, sequencing, permits
+// ---------------------------------------------------------------------------
+
+enum RoadmapPhase {
+  QUICK_WINS
+  MID_RANGE
+  MAJOR
+}
+
+enum PermitLikelihood {
+  NONE
+  LIKELY
+  REQUIRED
+  UNKNOWN
+}
+
+enum ExecutionPath {
+  DIY
+  HANDYMAN
+  LICENSED_CONTRACTOR
+}
+
+model RoadmapItem {
+  id               String           @id @default(cuid())
+  projectId        String
+  project          Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  recommendationId String?
+  recommendation   Recommendation?  @relation(fields: [recommendationId], references: [id], onDelete: SetNull)
+
+  phase            RoadmapPhase
+  order            Int
+  scope            String
+  /// Plain-language reason, carried forward from the recommendation rationale.
+  why              String
+  path             ExecutionPath
+  permit           PermitLikelihood @default(UNKNOWN)
+  effort           EffortLevel
+  lowCents         Int?
+  highCents        Int?
+  /// Free-text safety caveat, e.g. "may be load-bearing — confirm with a
+  /// structural engineer". Never a definitive claim about structure.
+  riskNote         String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  dependsOn  RoadmapDependency[] @relation("dependent")
+  dependents RoadmapDependency[] @relation("prerequisite")
+
+  @@unique([projectId, phase, order])
+  @@index([projectId])
+}
+
+/// Sequencing edges. "Don't finish floors before electrical" is a row here,
+/// not a sentence in a prompt.
+model RoadmapDependency {
+  id             String      @id @default(cuid())
+  dependentId    String
+  dependent      RoadmapItem @relation("dependent", fields: [dependentId], references: [id], onDelete: Cascade)
+  prerequisiteId String
+  prerequisite   RoadmapItem @relation("prerequisite", fields: [prerequisiteId], references: [id], onDelete: Cascade)
+  reason         String
+
+  @@unique([dependentId, prerequisiteId])
+  @@index([prerequisiteId])
+}
+
+// ---------------------------------------------------------------------------
+// Artifacts and renders
+// ---------------------------------------------------------------------------
+
+enum ArtifactType {
+  CONTRACTOR_BRIEF
+  DESIGNER_BRIEF
+  SHOPPING_LIST
+  PERMIT_CHECKLIST
+  CONTRACTOR_QUESTIONS
+}
+
+model Artifact {
+  id          String       @id @default(cuid())
+  projectId   String
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type        ArtifactType
+  version     Int          @default(1)
+  /// Rendered document body, kept so an artifact is reproducible without
+  /// re-running a model.
+  content     Json
+  pdfUrl      String?
+  generatedAt DateTime     @default(now())
+
+  @@unique([projectId, type, version])
+  @@index([projectId])
+}
+
+enum RenderKind {
+  CONCEPT
+  MATERIAL_BOARD
+  MOOD_BOARD
+}
+
+/// INVARIANT: a render cannot exist without the recommendation it illustrates.
+model Render {
+  id               String         @id @default(cuid())
+  recommendationId String
+  recommendation   Recommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+  kind             RenderKind     @default(CONCEPT)
+  url              String
+  /// Generation provenance: model, control image, seed, prompt hash.
+  provenance       Json?
+  /// Renders are direction, never a final design. Surfaces as a label in UI.
+  isDirectional    Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+
+  @@index([recommendationId])
+}
+
+// ---------------------------------------------------------------------------
+// Eval — judge scores, kept in-band so quality is queryable over time
+// ---------------------------------------------------------------------------
+
+model EvalRun {
+  id           String       @id @default(cuid())
+  rubricHash   String
+  promptHash   String
+  judgeModel   String
+  meanScore    Float
+  passed       Boolean
+  notes        String?
+  createdAt    DateTime     @default(now())
+  scores       EvalScore[]
+
+  @@index([createdAt])
+}
+
+model EvalScore {
+  id        String   @id @default(cuid())
+  runId     String
+  run       EvalRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
+  caseId    String
+  dimension String
+  score     Float
+  reason    String?
+
+  @@index([runId, caseId])
+}

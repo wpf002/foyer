@@ -1,0 +1,14 @@
+{
+  "name": "@foyer/eval",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "eval": "tsx src/run.ts",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": { "@foyer/ai": "workspace:*", "@foyer/rubric": "workspace:*" },
+  "devDependencies": { "tsx": "4.19.2" }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "@foyer/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@fastify/cors": "10.0.1",
+    "@foyer/ai": "workspace:*",
+    "@foyer/artifacts": "workspace:*",
+    "@foyer/cost": "workspace:*",
+    "@foyer/rubric": "workspace:*",
+    "fastify": "5.2.0"
+  },
+  "devDependencies": { "tsx": "4.19.2" }
+}
