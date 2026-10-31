@@ -1,5 +1,8 @@
 import { notFound } from 'next/navigation';
-import { Chip, Material, Trace, type Finish } from '@foyer/ui';
+import { buildBoard } from '@foyer/artifacts';
+import { Chip, Trace, type Finish } from '@foyer/ui';
+import { BoardColumn, BoardSpecs } from '@/components/board';
+import { DrawBoards } from '@/components/render-tools';
 import { api, isSample, type ApiProject } from '@/lib/api';
 import {
   answerFor,
@@ -34,15 +37,13 @@ function SampleRecommendations() {
               {group.map((rec) => {
                 const answer = answerFor(rec.briefAnswerId);
                 const room = roomFor(rec.roomId);
+                const board = buildBoard(rec);
                 return (
                   <li
                     key={rec.id}
-                    className="card card-lift grid gap-6 p-6 sm:grid-cols-[6.5rem_1fr] sm:p-7"
+                    className="card card-lift grid gap-6 p-6 sm:grid-cols-[7.5rem_1fr] sm:p-7"
                   >
-                    <Material
-                      finish={recFinish[rec.id] ?? 'plaster'}
-                      className="hidden aspect-[4/5] rounded-sm sm:block"
-                    />
+                    <BoardColumn board={board} fallback={recFinish[rec.id] ?? 'plaster'} />
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-1.5">
                         {room ? <Chip>{room.name}</Chip> : null}
@@ -53,6 +54,7 @@ function SampleRecommendations() {
                         {rec.title}
                       </h4>
                       <p className="mt-3 max-w-[64ch] text-ink-muted">{rec.rationale}</p>
+                      <BoardSpecs board={board} />
 
                       {rec.preserve ? (
                         <p className="mt-4 max-w-[62ch] rounded-sm bg-olive-soft px-4 py-3 text-sm text-ink-muted">
@@ -89,12 +91,16 @@ const CATEGORY_FINISH: Record<Category, Finish> = {
 function LiveRecommendations({ project }: { project: ApiProject }) {
   const recs = project.rooms.flatMap((room) => room.recommendations.map((rec) => ({ rec, room })));
   const prompts = new Map(project.brief?.answers.map((a) => [a.questionId, a.prompt]) ?? []);
+  const drawn = recs.some(({ rec }) => rec.board);
 
   return (
     <article>
-      <header>
-        <h2 className="text-[clamp(2.75rem,5vw,4rem)]">Recommendations</h2>
-        <p className="lede mt-3">Each one cites the answer behind it.</p>
+      <header className="flex flex-wrap items-end justify-between gap-6">
+        <div>
+          <h2 className="text-[clamp(2.75rem,5vw,4rem)]">Recommendations</h2>
+          <p className="lede mt-3">Each one cites the answer behind it.</p>
+        </div>
+        {recs.length ? <DrawBoards projectId={project.id} again={drawn} /> : null}
       </header>
 
       {recs.length === 0 ? <p className="mt-12 text-ink-muted">No critiques yet.</p> : null}
@@ -110,8 +116,8 @@ function LiveRecommendations({ project }: { project: ApiProject }) {
             </h3>
             <ol className="mt-5 space-y-5">
               {group.map(({ rec, room }) => (
-                <li key={rec.id} className="card card-lift grid gap-6 p-6 sm:grid-cols-[6.5rem_1fr] sm:p-7">
-                  <Material finish={CATEGORY_FINISH[cat]} className="hidden aspect-[4/5] rounded-sm sm:block" />
+                <li key={rec.id} className="card card-lift grid gap-6 p-6 sm:grid-cols-[7.5rem_1fr] sm:p-7">
+                  <BoardColumn board={rec.board} fallback={CATEGORY_FINISH[cat]} />
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <Chip>{room.name}</Chip>
@@ -122,6 +128,7 @@ function LiveRecommendations({ project }: { project: ApiProject }) {
                       {rec.title}
                     </h4>
                     <p className="mt-3 max-w-[64ch] text-ink-muted">{rec.rationale}</p>
+                    <BoardSpecs board={rec.board} />
                     {rec.preserve ? (
                       <p className="mt-4 max-w-[62ch] rounded-sm bg-olive-soft px-4 py-3 text-sm text-ink-muted">
                         <span className="font-medium text-olive">Keep </span>

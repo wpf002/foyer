@@ -6,6 +6,7 @@ import { costRoutes } from './routes/cost';
 import { accountRoutes } from './routes/accounts';
 import { artifactRoutes } from './routes/artifacts';
 import { projectRoutes } from './routes/projects';
+import { renderRoutes } from './routes/renders';
 
 const app = Fastify({ logger: true });
 
@@ -28,6 +29,7 @@ await app.register(costRoutes, { prefix: '/v1/cost' });
 await app.register(projectRoutes, { prefix: '/v1' });
 await app.register(artifactRoutes, { prefix: '/v1' });
 await app.register(accountRoutes, { prefix: '/v1' });
+await app.register(renderRoutes, { prefix: '/v1' });
 
 const port = Number(process.env.API_PORT ?? 4000);
 const host = process.env.API_HOST ?? '0.0.0.0';

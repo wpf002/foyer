@@ -97,7 +97,7 @@ Spend caps are enforced before every call in `packages/ai/src/spend.ts`, per use
 | 3 | Cost engine on zip region factors, flywheel writes | Built |
 | 4 | Handoff artifacts and PDF export | Built |
 | 5 | Pro accounts |  |
-| 6 | Renders, locked to a recommendation |  |
+| 6 | Material boards, locked to a recommendation | Built |
 | 7 | Scan based dimensions |  |
 | 8 | Cost data as a product |  |
 
@@ -118,6 +118,15 @@ new `Artifact` version only for documents whose content changed.
 
 PDF export prints the web document page with the local Chrome through `puppeteer-core`. Set
 `CHROME_PATH` if Chrome isn't in the default location, and `WEB_URL` if the web app isn't on 3000.
+
+## Renders
+
+A render is a `Render` row with a required `recommendationId`. Phase 6 draws material boards:
+`packages/artifacts/src/board.ts` reads the finishes and specs (kelvin, CRI, sheen, measurements)
+a recommendation names and lays them out as swatches. It reads nothing else, so a board can't show
+something the recommendation doesn't say. No model calls. An unchanged board isn't written twice.
+
+Photoreal concept renders need an image model provider, which hasn't been chosen.
 
 ## Commands
 

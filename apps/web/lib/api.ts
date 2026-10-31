@@ -1,3 +1,4 @@
+import type { Board } from '@foyer/artifacts';
 import type { Category, Effort, Path, Permit, Phase, Section } from './mock';
 
 /** Sample project id. Everything else is read from the API. */
@@ -38,6 +39,7 @@ export interface ApiRecommendation {
   preserve: string | null;
   effort: Effort;
   needsProReview: boolean;
+  board: Board | null;
 }
 
 export interface ApiRoom {

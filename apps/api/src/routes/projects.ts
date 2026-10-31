@@ -18,6 +18,7 @@ import {
   type ParsedAnswer,
   type RoomInput,
 } from '@foyer/rubric';
+import { boardOf } from '@foyer/artifacts';
 import { regionFactor } from '@foyer/cost';
 import { priceProject } from '../pricing';
 
@@ -79,7 +80,13 @@ const projectInclude = {
     orderBy: { createdAt: 'asc' },
     include: {
       photos: { orderBy: { createdAt: 'asc' } },
-      recommendations: { orderBy: { priority: 'asc' }, include: { briefAnswer: { select: { questionId: true } } } },
+      recommendations: {
+        orderBy: { priority: 'asc' },
+        include: {
+          briefAnswer: { select: { questionId: true } },
+          renders: { where: { kind: 'MATERIAL_BOARD' }, orderBy: { createdAt: 'desc' }, take: 1, select: { provenance: true } },
+        },
+      },
     },
   },
   roadmapItems: {
@@ -116,7 +123,11 @@ function serializeProject(p: NonNullable<Awaited<ReturnType<typeof ownedProject>
     rooms: p.rooms.map((r) => ({
       ...r,
       photos: r.photos.map(({ storageKey: _k, ...ph }) => ({ ...ph, url: `/v1/photos/${ph.id}/file` })),
-      recommendations: r.recommendations.map(({ briefAnswer, ...rec }) => ({ ...rec, citation: briefAnswer.questionId })),
+      recommendations: r.recommendations.map(({ briefAnswer, renders, ...rec }) => ({
+        ...rec,
+        citation: briefAnswer.questionId,
+        board: boardOf(renders[0]?.provenance ?? null),
+      })),
     })),
   };
 }
