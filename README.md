@@ -46,13 +46,13 @@ written into `packages/rubric/src/prompts.ts` and enforced by the judge's safety
 
 ```
 apps/web         Next.js app. Intake, brief, rooms, recommendations, roadmap, costs, artifacts.
-apps/api         Fastify. Projects, critique, roadmap, pricing, quotes.
+apps/api         Fastify. Projects, critique, roadmap, pricing, quotes, handoff.
 packages/db      Prisma schema and client. The invariants live here.
 packages/ai      Claude client, model tiering, spend ledger.
 packages/rubric  Design rubric, problem vocabulary, critique and judge prompts.
 packages/cost    Baseline unit costs, zip3 region factors, range estimates.
 packages/ui      Design tokens and primitives.
-packages/artifacts  Handoff document shapes.
+packages/artifacts  Handoff document builders and PDF printing.
 eval             Golden set and the regression runner.
 ```
 
@@ -95,7 +95,7 @@ Spend caps are enforced before every call in `packages/ai/src/spend.ts`, per use
 | 1 | Intake persistence, photo analysis, the critique chain | Done |
 | 2 | Roadmap sequencing and dependency reasoning | Built |
 | 3 | Cost engine on zip region factors, flywheel writes | Built |
-| 4 | Handoff artifacts and PDF export |  |
+| 4 | Handoff artifacts and PDF export | Built |
 | 5 | Pro accounts |  |
 | 6 | Renders, locked to a recommendation |  |
 | 7 | Scan based dimensions |  |
@@ -109,6 +109,15 @@ factors are approximations; there's no licensed cost feed yet.
 
 Every estimate and every logged quote writes a `CostDataPoint`. Once a zip3 and work type have 5
 local points, the range blends toward their median, weighted n/(n+20).
+
+## Handoff
+
+Five documents built from project rows by `packages/artifacts/src/build.ts`. No model calls, so
+they cost nothing to regenerate and never say something the plan doesn't. Each generate writes a
+new `Artifact` version only for documents whose content changed.
+
+PDF export prints the web document page with the local Chrome through `puppeteer-core`. Set
+`CHROME_PATH` if Chrome isn't in the default location, and `WEB_URL` if the web app isn't on 3000.
 
 ## Commands
 

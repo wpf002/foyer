@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@foyer/ai": "workspace:*",
+    "@foyer/artifacts": "workspace:*",
     "@foyer/cost": "workspace:*",
     "@foyer/rubric": "workspace:*"
   },

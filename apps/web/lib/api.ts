@@ -98,6 +98,16 @@ export interface ApiProject {
   roadmapItems: ApiRoadmapItem[];
 }
 
+export interface ApiArtifactSummary {
+  id: string;
+  type: string;
+  slug: string;
+  title: string;
+  version: number;
+  generatedAt: string;
+  sections: number;
+}
+
 export interface ApiProjectSummary {
   id: string;
   name: string;

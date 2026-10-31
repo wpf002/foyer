@@ -42,7 +42,7 @@ async function userId(): Promise<string> {
 }
 
 const bad = (reply: FastifyReply, error: string, status = 400) => reply.code(status).send({ error });
-const strList = (v: unknown): string[] =>
+export const strList = (v: unknown): string[] =>
   Array.isArray(v) ? v.filter((s): s is string => typeof s === 'string' && !!s.trim()).map((s) => s.trim()) : [];
 const inches = (v: unknown): number | null | undefined => {
   if (v === undefined) return undefined;
@@ -97,7 +97,7 @@ const projectInclude = {
   },
 } satisfies Prisma.ProjectInclude;
 
-async function ownedProject(id: string) {
+export async function ownedProject(id: string) {
   return prisma.project.findFirst({ where: { id, userId: await userId() }, include: projectInclude });
 }
 

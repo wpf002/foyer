@@ -37,7 +37,6 @@ async function railFor(id: string): Promise<Omit<RailProps, 'base'> | null> {
     meta: `Zip ${p.zip}`,
     finishes: DEFAULT_FINISHES,
     budget: low && high ? { lowCents: low, highCents: high } : undefined,
-    // Costs are Phase 3 and handoff is Phase 4 for live projects.
     nav: [
       { seg: '', title: 'Brief', count: p.brief?.answers.length ?? 0 },
       { seg: 'rooms', title: 'Rooms', count: p.rooms.length },
@@ -47,6 +46,8 @@ async function railFor(id: string): Promise<Omit<RailProps, 'base'> | null> {
         count: p.rooms.reduce((n, r) => n + r.recommendations.length, 0),
       },
       { seg: 'roadmap', title: 'Roadmap', count: p.roadmapItems.length },
+      { seg: 'costs', title: 'Costs', count: p.roadmapItems.filter((r) => r.lowCents !== null).length },
+      { seg: 'artifacts', title: 'Handoff', count: p.roadmapItems.length ? 5 : 0 },
     ],
   };
 }

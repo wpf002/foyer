@@ -10,6 +10,7 @@
     "lint": "eslint app components lib"
   },
   "dependencies": {
+    "@foyer/artifacts": "workspace:*",
     "@foyer/ui": "workspace:*",
     "next": "15.1.3",
     "react": "19.0.0",

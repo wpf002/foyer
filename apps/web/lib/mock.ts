@@ -211,7 +211,7 @@ export const artifacts = [
   { slug: 'designer-brief', title: 'Designer Brief', pages: 3, note: 'Mood, priority areas, budget allocation, pieces retained.', ready: true },
   { slug: 'shopping-list', title: 'Shopping List', pages: 2, note: 'Categories with ranges and specifications, by room.', ready: true },
   { slug: 'permit-checklist', title: 'Permit Checklist', pages: 2, note: 'Flagged items and Oakland building department links.', ready: true },
-  { slug: 'contractor-questions', title: 'Questions For Your Contractor', pages: 2, note: 'Nine questions tied to specific scope items.', ready: false },
+  { slug: 'contractor-questions', title: 'Questions For Your Contractor', pages: 2, note: 'Questions tied to each hired scope item.', ready: true },
 ];
 
 export const CATEGORY_LABEL: Record<Category, string> = {
