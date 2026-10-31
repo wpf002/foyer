@@ -1,0 +1,19 @@
+{
+  "name": "Kitchen",
+  "type": "Kitchen with island",
+  "widthIn": 192,
+  "lengthIn": 216,
+  "ceilingIn": 108,
+  "fixed": [
+    "Island with sink and plumbing",
+    "Wall ovens in tall gray cabinet run",
+    "Recessed cans and dropped soffit over island",
+    "Window at right wall"
+  ],
+  "movable": [
+    "Three cylinder pendants",
+    "Counter stools",
+    "Dining chairs at right"
+  ],
+  "description": "Large kitchen in a 2015 build. Tall high-gloss gray cabinets on the left wall with stacked wall ovens. Back wall has white flat-panel uppers and lowers with a white quartz backsplash. Dark gray gloss island with a waterfall white quartz top and the sink. Light maple floor. Eight recessed cans plus three cylinder pendants on a dropped soffit. Every surface is smooth and reflective."
+}

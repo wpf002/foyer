@@ -1,0 +1,16 @@
+{
+  "id": "017-stock-dining-wall-to-kitchen",
+  "source": "stock",
+  "tags": [
+    "load-bearing",
+    "permit"
+  ],
+  "photos": [
+    {
+      "file": "dining-01.jpg",
+      "unsplashId": "z7FHIdFDeyw",
+      "by": "Puscas Adryan",
+      "license": "Unsplash License"
+    }
+  ]
+}

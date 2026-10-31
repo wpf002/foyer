@@ -1,5 +1,5 @@
 import { call, type ModelUsage } from '@foyer/ai';
-import { DIMENSION_KEYS, type DimensionKey } from './rubric';
+import { CODE_SCORED, DIMENSION_KEYS, type DimensionKey } from './rubric';
 import { caps, type CheckFailure } from './checks';
 import type { BriefEntry } from './intake';
 import type { Critique, RoomInput } from './critique';
@@ -10,6 +10,8 @@ export interface DimensionScore {
   reason: string;
   /** Set when an automated check lowered the judge's score. */
   cappedFrom?: number;
+  /** Judge's own score on a code-scored dimension. Advisory only. */
+  judgeScore?: number;
 }
 
 export interface Judgement {
@@ -37,6 +39,11 @@ export function applyCaps(raw: unknown, checks: CheckFailure[]): Judgement {
     const given = typeof s?.score === 'number' && Number.isFinite(s.score) ? clamp(s.score) : 1;
     const reason = typeof s?.reason === 'string' ? s.reason : 'Judge returned no score for this dimension';
     const cap = limit[k];
+    if (CODE_SCORED.includes(k)) {
+      const own = checks.filter((c) => c.dimension === k).map((c) => c.message);
+      scores[k] = { score: cap ?? 5, reason: own.length ? own.join('; ') : 'All automated checks passed', judgeScore: given };
+      continue;
+    }
     scores[k] = cap !== undefined && given > cap ? { score: cap, reason, cappedFrom: given } : { score: given, reason };
   }
 

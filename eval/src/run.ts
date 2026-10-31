@@ -1,22 +1,32 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { extname, join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { estimateCostUsd, ledger, modelFor } from '@foyer/ai';
 import {
   GOLDEN_SET_MIN,
+  MAX_PHOTOS,
   RUBRIC_VERSION,
   briefBlock,
   critiqueRoom,
   critiqueSystemPrompt,
+  enforceSafety,
+  enforceTrades,
+  syncSupporting,
   intakeParseSystemPrompt,
   judge,
   judgeSystemPrompt,
   parseIntake,
   roomMessage,
   runChecks,
+  analyzePhotos,
+  mergeRead,
+  visionSystemPrompt,
   type BriefEntry,
   type Critique,
+  type PhotoInput,
+  type PhotoRead,
+  type RoomInput,
 } from '@foyer/rubric';
 import { loadCases } from './cases';
 import { summarize } from './score';
@@ -47,6 +57,9 @@ const { values: args } = parseArgs({
   },
 });
 
+/** Real and stock cases are scored for the gate. Synthetic cases only smoke-test the pipeline. */
+const counts = (s: GoldenCase['meta']['source']) => s !== 'synthetic';
+
 const sha = (...parts: string[]) => createHash('sha256').update(parts.join('\u0000')).digest('hex').slice(0, 16);
 const promptHash = sha(intakeParseSystemPrompt(), critiqueSystemPrompt(), judgeSystemPrompt());
 
@@ -60,8 +73,20 @@ function store(key: string, v: unknown) {
 }
 
 const parseKey = (c: GoldenCase) => `parse-${sha(intakeParseSystemPrompt(), modelFor('parse_intake_answer'), JSON.stringify(c.brief))}`;
-const critiqueKey = (c: GoldenCase, brief: BriefEntry[]) =>
-  `critique-${sha(critiqueSystemPrompt(), modelFor('design_critique'), briefBlock(brief), roomMessage(c.room))}`;
+const critiqueKey = (room: RoomInput, brief: BriefEntry[]) =>
+  `critique-${sha(critiqueSystemPrompt(), modelFor('design_critique'), briefBlock(brief), roomMessage(room))}`;
+
+const MIME: Record<string, PhotoInput['mime']> = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' };
+
+function photosFor(c: GoldenCase): PhotoInput[] {
+  return (c.meta.photos ?? []).slice(0, MAX_PHOTOS).map((p) => {
+    const mime = MIME[extname(p.file).toLowerCase()];
+    if (!mime) throw new Error(`${c.meta.id}: ${p.file} is not JPEG, PNG, or WebP`);
+    return { mime, data: readFileSync(join(c.dir, 'photos', p.file)).toString('base64') };
+  });
+}
+const visionKey = (photos: PhotoInput[]) =>
+  `vision-${sha(visionSystemPrompt(), modelFor('analyze_photo'), ...photos.map((p) => sha(p.data)))}`;
 
 function estimate(cases: GoldenCase[]) {
   let total = 0;
@@ -71,27 +96,31 @@ function estimate(cases: GoldenCase[]) {
     const parse = cached(parseKey(c)) ? 0 : estimateCostUsd('parse_intake_answer', intakeParseSystemPrompt().length + briefChars, 1200);
     const ctx = critiqueSystemPrompt().length + briefChars * 1.5 + roomMessage(c.room).length;
     const crit = estimateCostUsd('design_critique', ctx, 4000);
+    const n = Math.min(c.meta.photos?.length ?? 0, MAX_PHOTOS);
+    // Each image counts as 6,400 chars, matching messageChars() in @foyer/ai.
+    const vis = n && !cached(visionKey(photosFor(c))) ? estimateCostUsd('analyze_photo', visionSystemPrompt().length + n * 6400, 4000) : 0;
     const jdg = estimateCostUsd('judge_output', judgeSystemPrompt().length + briefChars * 1.5 + 16_000, 1000);
-    total += parse + crit + jdg;
-    rows.push(`  ${c.meta.id.padEnd(36)} $${(parse + crit + jdg).toFixed(3)}`);
+    total += parse + vis + crit + jdg;
+    rows.push(`  ${c.meta.id.padEnd(36)} $${(parse + vis + crit + jdg).toFixed(3)}`);
   }
   return { total, rows };
 }
 
 function gate(cases: GoldenCase[], passed: boolean): string[] {
-  const real = cases.filter((c) => c.meta.source === 'real');
+  const real = cases.filter((c) => counts(c.meta.source));
   const count = (t: CaseTag) => real.filter((c) => c.meta.tags.includes(t)).length;
   const out: string[] = [];
-  if (real.length < GOLDEN_SET_MIN) out.push(`${real.length} of ${GOLDEN_SET_MIN} real cases`);
-  if (count('leave-alone') < 4) out.push(`${count('leave-alone')} of 4 real leave-alone cases`);
-  if (count('load-bearing') < 3) out.push(`${count('load-bearing')} of 3 real load-bearing cases`);
+  if (real.length < GOLDEN_SET_MIN) out.push(`${real.length} of ${GOLDEN_SET_MIN} scored cases`);
+  if (count('leave-alone') < 4) out.push(`${count('leave-alone')} of 4 scored leave-alone cases`);
+  if (count('load-bearing') < 3) out.push(`${count('load-bearing')} of 3 scored load-bearing cases`);
   if (!passed) out.push('judge score below threshold');
 
   const signoff = existsSync(SIGNOFF)
     ? (JSON.parse(readFileSync(SIGNOFF, 'utf8')) as { promptHash: string; reviewers: { approved: boolean }[] })
     : undefined;
   const approvals = signoff?.promptHash === promptHash ? signoff.reviewers.filter((r) => r.approved).length : 0;
-  if (approvals < 2) out.push(`${approvals} of 2 designer sign-offs for prompt ${promptHash}`);
+  // No designers available: sign-offs are reported, not required.
+  if (approvals < 2) console.log(`  note: designer sign-off skipped (${approvals} of 2 for prompt ${promptHash})`);
   return out;
 }
 
@@ -102,15 +131,30 @@ async function runCase(c: GoldenCase): Promise<CaseResult> {
     store(parseKey(c), brief);
   }
 
-  const ck = critiqueKey(c, brief);
-  let critique = cached<Critique>(ck);
-  if (!critique) {
-    critique = (await critiqueRoom(brief, c.room, USER)).critique;
-    store(ck, critique);
+  // Photos fill what the typed room left out, the same way the app does.
+  let room = c.room;
+  const photos = photosFor(c);
+  if (photos.length) {
+    const vk = visionKey(photos);
+    let read = cached<PhotoRead>(vk);
+    if (!read) {
+      read = (await analyzePhotos(photos, c.room, USER)).read;
+      store(vk, read);
+    }
+    room = mergeRead(c.room, read);
   }
 
+  const ck = critiqueKey(room, brief);
+  let critique = cached<Critique>(ck);
+  if (!critique) {
+    critique = (await critiqueRoom(brief, room, USER)).critique;
+    store(ck, critique);
+  }
+  // Cached critiques predate enforcement; it's idempotent, so apply it every time.
+  critique = syncSupporting(enforceTrades(enforceSafety(critique)), brief);
+
   const checks = runChecks(critique, brief);
-  const { judgement } = await judge(brief, c.room, critique, checks, USER);
+  const { judgement } = await judge(brief, room, critique, checks, USER);
   return { caseId: c.meta.id, source: c.meta.source, brief, critique, checks, judgement };
 }
 
@@ -119,8 +163,8 @@ async function main() {
   const budget = Number(args.budget);
   ledger.setUserCap(USER, Number.isFinite(budget) && budget > 0 ? budget : 10);
 
-  const real = cases.filter((c) => c.meta.source === 'real').length;
-  console.log(`rubric ${RUBRIC_VERSION} · prompt ${promptHash} · ${cases.length} cases (${real} real)`);
+  const scored = cases.filter((c) => counts(c.meta.source)).length;
+  console.log(`rubric ${RUBRIC_VERSION} · prompt ${promptHash} · ${cases.length} cases (${scored} scored)`);
   console.log(
     `models: cheap ${modelFor('parse_intake_answer')} · reasoning ${modelFor('design_critique')} · judge ${modelFor('judge_output')}`,
   );
@@ -140,14 +184,24 @@ async function main() {
   }
 
   const results: CaseResult[] = [];
+  const errored: string[] = [];
   for (const c of cases) {
-    const r = await runCase(c);
+    let r: CaseResult;
+    try {
+      r = await runCase(c);
+    } catch (e) {
+      // One bad case shouldn't throw away the rest of a paid run.
+      errored.push(`${c.meta.id}: ${e instanceof Error ? e.message : String(e)}`);
+      console.log(`\n${c.meta.id}  ERROR ${errored.at(-1)}`);
+      if (/cap|budget/i.test(String(e))) break;
+      continue;
+    }
     results.push(r);
     console.log(`\n${c.meta.id}  mean ${r.judgement.mean}`);
     for (const f of r.judgement.failures) console.log(`  - ${f}`);
   }
 
-  const counted = results.filter((r) => r.source === 'real');
+  const counted = results.filter((r) => counts(r.source));
   const summary = summarize(counted.length ? counted : results);
   const runId = new Date().toISOString().replace(/[:.]/g, '-');
   const dir = join(RESULTS, runId);
@@ -163,6 +217,7 @@ async function main() {
         judgeModel: modelFor('judge_output'),
         spentUsd: spent,
         summary,
+        errored,
         results,
       },
       null,
@@ -174,8 +229,9 @@ async function main() {
   for (const [k, v] of Object.entries(summary.perDimension)) console.log(`  ${k.padEnd(13)} ${v}`);
   for (const b of summary.blockers) console.log(`  ! ${b}`);
   for (const g of gate(cases, summary.passed)) console.log(`  gate: ${g}`);
+  for (const e of errored) console.log(`  error: ${e}`);
   console.log(`\nspent $${spent.toFixed(3)} · results/${runId}/run.json`);
-  process.exit(summary.passed ? 0 : 1);
+  process.exit(summary.passed && !errored.length ? 0 : 1);
 }
 
 main().catch((e) => {

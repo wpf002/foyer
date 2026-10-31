@@ -1,0 +1,22 @@
+{
+  "name": "Kitchen",
+  "type": "Kitchen",
+  "widthIn": 132,
+  "lengthIn": 168,
+  "ceilingIn": 96,
+  "fixed": [
+    "Range and hood on back wall",
+    "Zellige-style white tile backsplash",
+    "Cream shaker cabinets",
+    "Fridge at left"
+  ],
+  "movable": [
+    "Reclaimed-wood island table",
+    "Woven pendant",
+    "Two wood stools",
+    "Pot rail and copper pans",
+    "Runner rug",
+    "Table lamp on counter"
+  ],
+  "description": "Rental kitchen in an older house. Cream shaker cabinets, butcher-block counters, handmade white tile to a full-width open shelf. A reclaimed wood work table sits in the middle as an island, with a large woven pendant over it. Copper pans on a rail. Wide plank wood floor. One window light from the right."
+}

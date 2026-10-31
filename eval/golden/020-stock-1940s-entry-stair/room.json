@@ -1,0 +1,22 @@
+{
+  "name": "Entry",
+  "type": "Entry hall",
+  "widthIn": 96,
+  "lengthIn": 144,
+  "ceilingIn": 96,
+  "fixed": [
+    "Original 1940s staircase with oak treads and iron balusters",
+    "Front door with sidelights",
+    "Original oak strip floor",
+    "Hot-water baseboard radiator"
+  ],
+  "movable": [
+    "Lantern pendant",
+    "Wall hooks",
+    "Console",
+    "Round mirror",
+    "Stool",
+    "Boot mat"
+  ],
+  "description": "Entry hall of a 1940s colonial. White painted board walls, original stair on the left with oak treads, painted risers and thin black iron balusters. Paneled front door with divided-light sidelights. Original oak strip floor. Lantern pendant. Wall hooks, narrow black metal console and round brass mirror. Doorway to a sage green room on the right."
+}

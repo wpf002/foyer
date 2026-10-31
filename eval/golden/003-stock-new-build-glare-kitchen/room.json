@@ -1,0 +1,19 @@
+{
+  "name": "Kitchen",
+  "type": "Kitchen with island",
+  "widthIn": 204,
+  "lengthIn": 240,
+  "ceilingIn": 120,
+  "fixed": [
+    "Floor-to-ceiling window over prep sink",
+    "Marble slab backsplash with pot filler",
+    "White oak tall cabinets with wall ovens",
+    "Doorway to pantry"
+  ],
+  "movable": [
+    "Dome pendant",
+    "Oak counter chairs",
+    "Plant"
+  ],
+  "description": "New-build kitchen. White inset shaker cabinets with glass-front uppers, marble slab backsplash, white oak tall cabinets housing double wall ovens. Large black-framed window over a second sink on the right wall gets direct afternoon sun. Oak island with a white top and four oak chairs. One large white dome pendant. Light oak floor."
+}

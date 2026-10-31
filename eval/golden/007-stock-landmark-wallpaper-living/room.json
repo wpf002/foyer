@@ -1,0 +1,22 @@
+{
+  "name": "Living room",
+  "type": "Living room",
+  "widthIn": 228,
+  "lengthIn": 264,
+  "ceilingIn": 110,
+  "fixed": [
+    "Painted wood fireplace surround with gas insert",
+    "Wall of three windows",
+    "Built-in white bookcase beside fireplace",
+    "Crown molding",
+    "Original scenic wallpaper"
+  ],
+  "movable": [
+    "Oversized U-shaped sectional",
+    "Wood coffee table",
+    "Jute rug",
+    "Lounge chair",
+    "Table lamp"
+  ],
+  "description": "Front parlor in an 1890s house. Original scenic wallpaper in dark greens and browns covers the walls up to crown molding. A wall of three double-hung windows. Painted fireplace surround with a gas insert, built-in bookcase beside it. A very large cream U-shaped sectional runs under the windows and wraps the room, cutting off the path to the fireplace. Cherry floor, jute rug."
+}

@@ -1,0 +1,15 @@
+{
+  "id": "001-stock-gray-gloss-kitchen",
+  "source": "stock",
+  "tags": [
+    "small-budget"
+  ],
+  "photos": [
+    {
+      "file": "kitchen-01.jpg",
+      "unsplashId": "RwXneIyqxAw",
+      "by": "Lotus Design N Print",
+      "license": "Unsplash License"
+    }
+  ]
+}

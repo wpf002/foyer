@@ -13,3 +13,5 @@ eval/results/
 packages/db/generated/
 *.log
 .claude/
+
+.uploads/

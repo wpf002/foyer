@@ -22,7 +22,9 @@ export function loadCases(only?: string): GoldenCase[] {
     const room = read<RoomInput>(dir, 'room.json');
 
     if (meta.id !== id) throw new Error(`${id}: case.json id is "${meta.id}"`);
-    if (meta.source !== 'real' && meta.source !== 'synthetic') throw new Error(`${id}: source must be real or synthetic`);
+    if (!['real', 'stock', 'synthetic'].includes(meta.source)) throw new Error(`${id}: source must be real, stock or synthetic`);
+    for (const p of meta.photos ?? [])
+      if (!existsSync(join(dir, 'photos', p.file))) throw new Error(`${id}: missing photos/${p.file}`);
     for (const a of brief) question(a.questionId);
     if (brief.length !== 15) throw new Error(`${id}: brief has ${brief.length} answers, expected 15`);
     if (!room.name || !room.type || !room.description) throw new Error(`${id}: room needs name, type, description`);

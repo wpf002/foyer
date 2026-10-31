@@ -1,0 +1,21 @@
+{
+  "name": "Bedroom",
+  "type": "Bedroom with office",
+  "widthIn": 180,
+  "lengthIn": 192,
+  "ceilingIn": 108,
+  "fixed": [
+    "Arched alcove with window",
+    "Coffered ceiling recess"
+  ],
+  "movable": [
+    "Oak credenza used as desk",
+    "Upholstered desk chair",
+    "Bed",
+    "Round wood nightstand",
+    "Two lamps",
+    "Jute rug",
+    "Plant stool"
+  ],
+  "description": "Bedroom that doubles as an office. Warm greige walls. Centered arched alcove with a window and roman shade, a plant on a stool inside it. Oak credenza used as a desk on the left with a map print above. Bed on the right with a round wood nightstand. Wide oak floor. Shallow coffered ceiling recess with recessed lights."
+}

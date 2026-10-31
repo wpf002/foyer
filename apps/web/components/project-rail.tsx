@@ -2,65 +2,57 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cx, Material, MoneyRange } from '@foyer/ui';
-import {
-  artifacts,
-  brief,
-  palette,
-  project,
-  recommendations,
-  roadmap,
-  rooms,
-  totals,
-} from '@/lib/mock';
+import { cx, Material, MoneyRange, type Finish } from '@foyer/ui';
 
-const NAV = [
-  { seg: '', title: 'Brief', count: brief.length },
-  { seg: 'rooms', title: 'Rooms', count: rooms.length },
-  { seg: 'recommendations', title: 'Recommendations', count: recommendations.length },
-  { seg: 'roadmap', title: 'Roadmap', count: roadmap.length },
-  { seg: 'costs', title: 'Costs', count: roadmap.length },
-  { seg: 'artifacts', title: 'Handoff', count: artifacts.length },
-];
+export interface RailProps {
+  base: string;
+  name: string;
+  subtitle?: string;
+  meta: string;
+  finishes: Finish[];
+  budget?: { lowCents: number; highCents: number; overCents?: number };
+  nav: { seg: string; title: string; count: number }[];
+}
 
-export function ProjectRail({ base }: { base: string }) {
+export function ProjectRail({ base, name, subtitle, meta, finishes, budget, nav }: RailProps) {
   const path = usePathname();
-  const over = totals.midCents - project.budgetHighCents;
 
   return (
     <aside className="no-print lg:sticky lg:top-16 lg:h-[calc(100dvh-4rem)] lg:overflow-y-auto lg:py-12">
       {/* The project's finish board, as a strip across the top of its card. */}
       <div className="card overflow-hidden">
         <div className="grid h-20 grid-cols-6">
-          {palette.map((f) => (
-            <Material key={f.name} finish={f.finish} className="h-full" />
+          {finishes.map((f, i) => (
+            <Material key={i} finish={f} className="h-full" />
           ))}
         </div>
         <div className="p-5">
-          <h1 className="text-[2rem] leading-none">{project.name}</h1>
-          <p className="mt-2 text-sm text-ink-muted">{project.subtitle}</p>
-          <p className="mt-0.5 text-sm text-ink-faint">
-            {project.city} · ×{project.regionFactor.toFixed(2)}
-          </p>
+          <h1 className="text-[2rem] leading-none">{name}</h1>
+          {subtitle ? <p className="mt-2 text-sm text-ink-muted">{subtitle}</p> : null}
+          <p className="mt-0.5 text-sm text-ink-faint">{meta}</p>
 
-          <div className="mt-5 rounded-sm bg-brass-soft/70 px-3.5 py-3">
-            <p className="text-xs font-medium text-brass">Budget</p>
-            <MoneyRange
-              lowCents={project.budgetLowCents}
-              highCents={project.budgetHighCents}
-              className="mt-0.5 block font-display text-xl text-ink"
-            />
-            <p className={cx('mt-1 text-xs', over > 0 ? 'text-clay-ink' : 'text-olive')}>
-              {over > 0
-                ? `Plan runs $${Math.round(over / 100).toLocaleString('en-US')} over`
-                : 'Plan fits'}
-            </p>
-          </div>
+          {budget ? (
+            <div className="mt-5 rounded-sm bg-brass-soft/70 px-3.5 py-3">
+              <p className="text-xs font-medium text-brass">Budget</p>
+              <MoneyRange
+                lowCents={budget.lowCents}
+                highCents={budget.highCents}
+                className="mt-0.5 block font-display text-xl text-ink"
+              />
+              {budget.overCents !== undefined ? (
+                <p className={cx('mt-1 text-xs', budget.overCents > 0 ? 'text-clay-ink' : 'text-olive')}>
+                  {budget.overCents > 0
+                    ? `Plan runs $${Math.round(budget.overCents / 100).toLocaleString('en-US')} over`
+                    : 'Plan fits'}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </div>
 
       <nav className="mt-6 space-y-0.5">
-        {NAV.map((n) => {
+        {nav.map((n) => {
           const href = n.seg ? `${base}/${n.seg}` : base;
           const active = n.seg ? path.startsWith(href) : path === base;
           return (
@@ -75,12 +67,7 @@ export function ProjectRail({ base }: { base: string }) {
               )}
             >
               {n.title}
-              <span
-                className={cx(
-                  'text-xs tabular-nums',
-                  active ? 'text-ink-inverse-muted' : 'text-ink-faint',
-                )}
-              >
+              <span className={cx('text-xs tabular-nums', active ? 'text-ink-inverse-muted' : 'text-ink-faint')}>
                 {n.count}
               </span>
             </Link>

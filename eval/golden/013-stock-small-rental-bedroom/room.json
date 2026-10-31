@@ -1,0 +1,19 @@
+{
+  "name": "Bedroom",
+  "type": "Small bedroom",
+  "widthIn": 120,
+  "lengthIn": 132,
+  "ceilingIn": 96,
+  "fixed": [
+    "Painted sage-green walls (landlord)",
+    "Single window on bed wall"
+  ],
+  "movable": [
+    "Cane headboard bed",
+    "White nightstand",
+    "Linen lamp",
+    "Abstract print",
+    "Dresser"
+  ],
+  "description": "Small rental bedroom. Walls painted dark sage by the landlord. Queen bed with a cane-panel headboard nearly fills the width. White nightstand with a linen-shaded lamp. One abstract print above the bed. A dresser on the facing wall leaves about 24 inches to walk."
+}

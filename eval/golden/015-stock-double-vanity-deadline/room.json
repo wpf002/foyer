@@ -1,0 +1,18 @@
+{
+  "name": "Primary bath",
+  "type": "Bathroom",
+  "widthIn": 120,
+  "lengthIn": 144,
+  "ceilingIn": 96,
+  "fixed": [
+    "Two separate wood vanities with marble tops",
+    "Two brass sconces over mirrors",
+    "Wall plumbing for both sinks"
+  ],
+  "movable": [
+    "Oval brass mirrors",
+    "Accessories",
+    "Plant"
+  ],
+  "description": "Primary bath with two separate oak vanities with marble tops and unlacquered brass faucets. Oval brass-framed mirrors, brass sconces above each. Plain off-white plaster walls. Large plant at left. Door reflected in the right mirror."
+}

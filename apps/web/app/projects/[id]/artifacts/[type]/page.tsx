@@ -1,3 +1,4 @@
+import { isSample } from '@/lib/api';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -293,6 +294,7 @@ export default async function ArtifactPage({
   params: Promise<{ id: string; type: string }>;
 }) {
   const { id, type } = await params;
+  if (!isSample(id)) notFound();
   const meta = artifacts.find((a) => a.slug === type);
   if (!meta) notFound();
 

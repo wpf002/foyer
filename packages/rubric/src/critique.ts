@@ -2,6 +2,7 @@ import { call, type ModelUsage } from '@foyer/ai';
 import { CATEGORIES, EFFORT, type Category, type Effort } from './rubric';
 import type { BriefEntry } from './intake';
 import { briefBlock, critiqueSystemPrompt, roomMessage } from './prompts';
+import { enforceSafety, enforceTrades, syncSupporting } from './checks';
 
 /** Text-only room description. Phase 2 replaces `description` with the vision read. */
 export interface RoomInput {
@@ -21,6 +22,8 @@ export interface CritiqueRec {
   rationale: string;
   /** questionId of the brief answer that justifies this item. */
   citation: string;
+  /** Other answers that also support it, most relevant first. Never repeats `citation`. */
+  supporting?: string[];
   preserve?: string;
   effort: Effort;
   needsProReview: boolean;
@@ -62,6 +65,7 @@ export const CRITIQUE_SCHEMA = {
           title: { type: 'string' },
           rationale: { type: 'string' },
           citation: { type: 'string' },
+          supporting: { type: 'array', items: { type: 'string' } },
           preserve: { type: 'string' },
           effort: { enum: EFFORT },
           needsProReview: { type: 'boolean' },
@@ -114,6 +118,8 @@ export function shapeErrors(v: unknown): string[] {
       if (!EFFORT.includes(r?.effort)) e.push(`recommendations[${i}].effort invalid`);
       if (typeof r?.title !== 'string' || typeof r?.rationale !== 'string') e.push(`recommendations[${i}] missing text`);
       if (typeof r?.needsProReview !== 'boolean') e.push(`recommendations[${i}].needsProReview missing`);
+      if (r?.supporting !== undefined && !(Array.isArray(r.supporting) && r.supporting.every((s) => typeof s === 'string')))
+        e.push(`recommendations[${i}].supporting invalid`);
     });
   if (!o.palette || !Array.isArray(o.palette.colors)) e.push('palette missing');
   if (!Array.isArray(o.leaveAlone)) e.push('leaveAlone missing');
@@ -139,10 +145,11 @@ export async function critiqueRoom(brief: BriefEntry[], room: RoomInput, userId:
       { text: briefBlock(brief), cache: true },
     ],
     messages: [{ role: 'user', content: roomMessage(room) }],
-    maxTokens: 16000,
+    // Adaptive thinking shares this budget; 16k ran out on photo-merged rooms.
+    maxTokens: 32000,
     json: true,
   });
   const errs = shapeErrors(res.parsed);
   if (errs.length) throw new Error(`Critique failed shape check: ${errs.join('; ')}`);
-  return { critique: res.parsed as Critique, model: res.model, usage: res.usage };
+  return { critique: syncSupporting(enforceTrades(enforceSafety(res.parsed as Critique)), brief), model: res.model, usage: res.usage };
 }

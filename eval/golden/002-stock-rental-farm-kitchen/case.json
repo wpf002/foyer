@@ -1,0 +1,16 @@
+{
+  "id": "002-stock-rental-farm-kitchen",
+  "source": "stock",
+  "tags": [
+    "renter",
+    "leave-alone"
+  ],
+  "photos": [
+    {
+      "file": "kitchen-02.jpg",
+      "unsplashId": "YABErdnJPGc",
+      "by": "Sosey Interiors",
+      "license": "Unsplash License"
+    }
+  ]
+}

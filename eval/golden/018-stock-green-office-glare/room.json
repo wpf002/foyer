@@ -1,0 +1,21 @@
+{
+  "name": "Office",
+  "type": "Home office",
+  "widthIn": 132,
+  "lengthIn": 144,
+  "ceilingIn": 96,
+  "fixed": [
+    "Large window at left wall",
+    "Green painted walls"
+  ],
+  "movable": [
+    "Wood desk",
+    "Black task chair",
+    "Woven sling chair",
+    "Macrame hanging",
+    "Framed prints",
+    "Rug",
+    "Plant"
+  ],
+  "description": "Spare-room office. Deep green walls, white trim. Wood desk with splayed legs against the back wall, monitor centered, prints above. Large window on the left wall with white sheers. Woven sling chair by the window, white patterned rug, black lounge chair in the corner. One overhead fixture."
+}

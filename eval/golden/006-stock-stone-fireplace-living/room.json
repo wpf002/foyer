@@ -1,0 +1,20 @@
+{
+  "name": "Living room",
+  "type": "Living room",
+  "widthIn": 168,
+  "lengthIn": 204,
+  "ceilingIn": 96,
+  "fixed": [
+    "Stacked stone fireplace with timber mantel",
+    "Two windows flanking the fireplace",
+    "TV wall-mounted right of chimney"
+  ],
+  "movable": [
+    "Leather club chair",
+    "Floor lamp",
+    "Trunk",
+    "Sofa with blankets",
+    "Coffee table"
+  ],
+  "description": "Living room in a 1960s cabin. Floor-to-ceiling stacked stone fireplace with a rough timber mantel, flanked by two tall windows looking at trees. TV is mounted on the wall right of the chimney, partly in front of a window. Brown leather club chair left, old steamer trunk right. Sofa faces the fireplace. Small red rug."
+}

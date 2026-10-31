@@ -16,12 +16,20 @@ export interface CacheableBlock {
 
 export type Effort = 'low' | 'medium' | 'high' | 'xhigh' | 'max';
 
+export type ImageMime = 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif';
+
+export type ContentBlock =
+  | { type: 'text'; text: string }
+  | { type: 'image'; source: { type: 'base64'; media_type: ImageMime; data: string } };
+
+export type MessageContent = string | ContentBlock[];
+
 export interface ModelRequest {
   task: Task;
   userId: string;
   /** System blocks in cache order: stable first, volatile last. */
   system: CacheableBlock[];
-  messages: { role: 'user' | 'assistant'; content: string }[];
+  messages: { role: 'user' | 'assistant'; content: MessageContent }[];
   maxTokens?: number;
   effort?: Effort;
   /** Reply must be JSON; parsed into `parsed`. */
@@ -113,7 +121,8 @@ const claudeTransport: Transport = async (body, tier) => {
   client ??= new Anthropic();
   let msg: Anthropic.Beta.BetaMessage;
   try {
-    msg = await client.beta.messages.create(body as unknown as Anthropic.Beta.MessageCreateParamsNonStreaming);
+    // Streamed so long critiques don't hit the SDK's non-streaming timeout.
+    msg = await client.beta.messages.stream(body as unknown as Anthropic.Beta.MessageCreateParamsStreaming).finalMessage();
   } catch (e) {
     if (e instanceof Anthropic.APIError) throw new ModelError(`Claude ${e.status}: ${e.message}`, e.status ?? 500);
     throw e;
@@ -155,11 +164,21 @@ export function extractJson<T>(text: string): T {
   }
 }
 
+/** Images bill by pixels, not base64 length: count each as ~1,600 tokens (6,400 chars). */
+const IMAGE_CHARS = 6_400;
+
+function messageChars(messages: ModelRequest['messages']): number {
+  return messages.reduce((n, m) => {
+    if (typeof m.content === 'string') return n + m.content.length;
+    return n + m.content.reduce((k, b) => k + (b.type === 'text' ? b.text.length : IMAGE_CHARS), 0);
+  }, 0);
+}
+
 export async function call<T = unknown>(req: ModelRequest): Promise<ModelResponse<T>> {
   const body = buildBody(req);
 
   // Worst-case pre-flight estimate so the cap refuses before spending.
-  const chars = req.system.reduce((n, b) => n + b.text.length, 0) + JSON.stringify(req.messages).length;
+  const chars = req.system.reduce((n, b) => n + b.text.length, 0) + messageChars(req.messages);
   ledger.assertHeadroom(req.userId, estimateCostUsd(req.task, chars, body.max_tokens as number));
 
   const res = (await transport(body, tierFor(req.task))) as ModelResponse<T>;

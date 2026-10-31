@@ -1,0 +1,21 @@
+{
+  "name": "Child's room",
+  "type": "Bedroom",
+  "widthIn": 120,
+  "lengthIn": 132,
+  "ceilingIn": 96,
+  "fixed": [
+    "Window with sheer curtain",
+    "Wall wainscot paint line"
+  ],
+  "movable": [
+    "Toddler bed",
+    "Canopy hung from ceiling hook",
+    "Low shelf",
+    "Play table and chair",
+    "Wall shelf above table",
+    "Plush giraffe",
+    "Rug"
+  ],
+  "description": "Three-year-old's room in a rental. Lower walls painted cream with a scalloped edge, upper walls white with felt decorations and a name decal. Toddler bed in the corner under a fabric canopy hung from a ceiling hook. Low open shelf under the window. Small play table and chair. A wall-mounted shelf and plug-in sconce sit above the table with the cord running down the wall."
+}

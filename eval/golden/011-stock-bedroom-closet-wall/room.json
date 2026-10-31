@@ -1,0 +1,22 @@
+{
+  "name": "Primary bedroom",
+  "type": "Bedroom",
+  "widthIn": 192,
+  "lengthIn": 216,
+  "ceilingIn": 96,
+  "fixed": [
+    "Large window with trees",
+    "Flush-mount ceiling light",
+    "Doorway at left wall",
+    "Wall behind headboard shared with hall closet, load path unconfirmed"
+  ],
+  "movable": [
+    "Upholstered bed",
+    "Two nightstands with lamps",
+    "Armchair",
+    "Floral rug",
+    "Glass side table",
+    "Wall-mounted TV"
+  ],
+  "description": "Primary bedroom in a 1980s two-story. Charcoal-gray walls, wide hand-scraped wood floor. Upholstered bed on the right wall between two nightstands with teal lamps. Large window opposite the door with gray curtains. Armchair and floor lamp by the window. One flush-mount ceiling light. TV mounted on the left wall. The wall behind the bed backs onto a hall linen closet."
+}

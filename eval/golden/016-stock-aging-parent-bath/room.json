@@ -1,0 +1,21 @@
+{
+  "name": "Hall bath",
+  "type": "Narrow bath",
+  "widthIn": 66,
+  "lengthIn": 132,
+  "ceilingIn": 96,
+  "fixed": [
+    "Curbless walk-in shower at end",
+    "Wall-hung toilet",
+    "Floating double-bowl vanity",
+    "Small high window in shower",
+    "Marble-look tile throughout"
+  ],
+  "movable": [
+    "Round mirror",
+    "Bath mat",
+    "Towel bar",
+    "Accessories"
+  ],
+  "description": "Narrow hall bath. Large marble-look porcelain on all walls and floor. Floating oak vanity with a black double-bowl top and black faucets. Round mirror. Wall-hung toilet. Curbless walk-in shower at the far end with a glass panel and a small high window. Recessed downlights and a cove LED strip."
+}

@@ -5,9 +5,13 @@ export type CaseTag = 'leave-alone' | 'load-bearing' | 'permit' | 'small-budget'
 
 export interface CaseMeta {
   id: string;
-  /** Synthetic cases run but never count toward the gate. */
-  source: 'real' | 'synthetic';
+  /**
+   * real: a homeowner's room and brief. stock: a licensed stock photo with a
+   * written brief; counts toward the gate. synthetic: pipeline smoke test only.
+   */
+  source: 'real' | 'stock' | 'synthetic';
   tags: CaseTag[];
+  photos?: { file: string; unsplashId?: string; by?: string; license?: string }[];
 }
 
 export interface GoldenCase {

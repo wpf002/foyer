@@ -1,11 +1,15 @@
 import { randomInt } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { SCORING_DIMENSIONS } from '@foyer/rubric';
 import type { CaseResult } from './types';
 
 /**
  * Designer review packet. Shuffles a run's critiques, strips case ids and
  * scores, and writes one markdown file per room plus a separate key.
+ *
+ * Each file ends with the judge's six dimensions, so designer scores can be
+ * compared to the judge with `calibrate`.
  *
  *   pnpm --filter @foyer/eval blind <runId> [count]
  */
@@ -18,7 +22,7 @@ if (!runId) {
 
 const dir = join(import.meta.dirname, '..', 'results', runId);
 const run = JSON.parse(readFileSync(join(dir, 'run.json'), 'utf8')) as { promptHash: string; results: CaseResult[] };
-const pool = [...run.results];
+const pool = run.results.filter((r) => r.source !== 'synthetic');
 for (let i = pool.length - 1; i > 0; i--) {
   const j = randomInt(i + 1);
   [pool[i], pool[j]] = [pool[j]!, pool[i]!];
@@ -45,7 +49,7 @@ sample.forEach((r, i) => {
     '## Recommendations',
     ...c.recommendations.map(
       (x, n) =>
-        `### ${n + 1}. ${x.title}\n${x.category} · ${x.effort} · cites ${x.citation}${x.needsProReview ? ' · pro review' : ''}\n\n${x.rationale}${x.preserve ? `\n\nKeep: ${x.preserve}` : ''}`,
+        `### ${n + 1}. ${x.title}\n${x.category} · ${x.effort} · cites ${[x.citation, ...(x.supporting ?? [])].join(', ')}${x.needsProReview ? ' · pro review' : ''}\n\n${x.rationale}${x.preserve ? `\n\nKeep: ${x.preserve}` : ''}`,
     ),
     '',
     '## Palette',
@@ -61,9 +65,22 @@ sample.forEach((r, i) => {
     '',
     'What is wrong or missing?',
     '',
+    '## Scores',
+    `Score each 1 to 5 in scores/<your-name>.json under "${label}".`,
+    '',
+    ...SCORING_DIMENSIONS.map(
+      (d) => `- **${d.label}** (${d.key}): ${d.question} 1: ${d.anchors[1]} 3: ${d.anchors[3]} 5: ${d.anchors[5]}`,
+    ),
+    '',
   ].join('\n');
   writeFileSync(join(out, `${label}.md`), md);
 });
 
 writeFileSync(join(dir, 'blind-key.json'), JSON.stringify({ promptHash: run.promptHash, key }, null, 2));
-console.log(`${sample.length} files in results/${runId}/blind · key in results/${runId}/blind-key.json`);
+const blank = Object.fromEntries(SCORING_DIMENSIONS.map((d) => [d.key, null]));
+mkdirSync(join(dir, 'scores'), { recursive: true });
+writeFileSync(
+  join(dir, 'scores', 'TEMPLATE.json'),
+  JSON.stringify({ reviewer: '', date: '', scores: Object.fromEntries(Object.keys(key).map((l) => [l, { ...blank }])) }, null, 2),
+);
+console.log(`${sample.length} files in results/${runId}/blind · key in results/${runId}/blind-key.json · copy scores/TEMPLATE.json per reviewer`);

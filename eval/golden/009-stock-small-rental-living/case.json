@@ -1,0 +1,16 @@
+{
+  "id": "009-stock-small-rental-living",
+  "source": "stock",
+  "tags": [
+    "renter",
+    "small-budget"
+  ],
+  "photos": [
+    {
+      "file": "living-04.jpg",
+      "unsplashId": "OtXADkUh3-I",
+      "by": "Minh Pham",
+      "license": "Unsplash License"
+    }
+  ]
+}

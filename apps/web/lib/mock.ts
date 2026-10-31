@@ -296,3 +296,6 @@ export const recFinish: Record<string, Finish> = {
   c7: 'walnut',
   c8: 'walnut',
 };
+
+/** Short label per question, used on citation chips. */
+export const SHORT: Record<string, string> = Object.fromEntries(brief.map((b) => [b.questionId, b.short]));

@@ -1,0 +1,15 @@
+{
+  "id": "011-stock-bedroom-closet-wall",
+  "source": "stock",
+  "tags": [
+    "load-bearing"
+  ],
+  "photos": [
+    {
+      "file": "bedroom-01.jpg",
+      "unsplashId": "hCU4fimRW-c",
+      "by": "Francesca Tosolini",
+      "license": "Unsplash License"
+    }
+  ]
+}

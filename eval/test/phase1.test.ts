@@ -27,8 +27,8 @@ const base = (): Critique => ({
   roomRead: 'Galley with one pendant.',
   problems: [],
   recommendations: [
-    { category: 'FUNCTIONAL', title: 'Swap Fridge Hinge', rationale: 'Door blocks the aisle.', citation: 'Q10', effort: 'WEEKEND', needsProReview: false },
-    { category: 'ATMOSPHERIC', title: 'Add Under-Cabinet Light', rationale: '2700K strips.', citation: 'Q07', effort: 'WEEKEND', needsProReview: false },
+    { category: 'FUNCTIONAL', title: 'Swap Fridge Hinge', rationale: 'Door blocks the aisle, per Q10.', citation: 'Q10', effort: 'WEEKEND', needsProReview: false },
+    { category: 'ATMOSPHERIC', title: 'Add Under-Cabinet Light', rationale: '2700K strips for the calm mood in Q07.', citation: 'Q07', effort: 'WEEKEND', needsProReview: false },
   ],
   palette: { colors: [], reasoning: 'Warm field for a calm room.', citations: ['Q07'] },
   leaveAlone: [{ element: 'Oak floor', reason: 'Client is keeping it.', citation: 'Q10' }],
@@ -68,11 +68,11 @@ test('widening an opening without pro review is flagged', () => {
 
 test('judge scores are capped by checks and missing dimensions score 1', () => {
   const j = applyCaps(
-    { scores: { safety: { score: 5, reason: 'ok' }, relevance: { score: 4.6, reason: 'ok' } }, failures: ['x'] },
-    [{ dimension: 'safety', cap: 1, message: 'assertion' }],
+    { scores: { restraint: { score: 5, reason: 'ok' }, relevance: { score: 4.6, reason: 'ok' } }, failures: ['x'] },
+    [{ dimension: 'restraint', cap: 1, message: 'assertion' }],
   );
-  assert.equal(j.scores.safety.score, 1);
-  assert.equal(j.scores.safety.cappedFrom, 5);
+  assert.equal(j.scores.restraint.score, 1);
+  assert.equal(j.scores.restraint.cappedFrom, 5);
   assert.equal(j.scores.relevance.score, 5);
   assert.equal(j.scores.credibility.score, 1);
   assert.equal(j.failures[0], '[check] assertion');
@@ -130,6 +130,6 @@ test('new wiring without pro review is flagged, bulb swaps are not', () => {
   const c = base();
   c.recommendations[1]!.rationale = 'Add two recessed downlights over the sink.';
   assert.ok(runChecks(c, brief).some((f) => f.dimension === 'safety'));
-  c.recommendations[1]!.rationale = 'Fit a dim-to-warm bulb in the existing pendant, behind the under-cabinet light.';
+  c.recommendations[1]!.rationale = 'Fit a dim-to-warm bulb in the existing pendant, behind the under-cabinet light, per Q07.';
   assert.deepEqual(runChecks(c, brief), []);
 });

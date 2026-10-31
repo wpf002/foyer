@@ -1,0 +1,22 @@
+{
+  "name": "Great room",
+  "type": "Living-dining",
+  "widthIn": 216,
+  "lengthIn": 264,
+  "ceilingIn": 168,
+  "fixed": [
+    "Freestanding wood stove on tile hearth with steel flue",
+    "Two large picture windows",
+    "Built-in window bench left",
+    "Vaulted ceiling"
+  ],
+  "movable": [
+    "Round pedestal dining table",
+    "Two upholstered dining chairs",
+    "Sofa",
+    "Wood coffee table",
+    "Low open shelving",
+    "Saucer pendant"
+  ],
+  "description": "Vaulted great room in a 1970s house, recently renovated. Black freestanding wood stove centered on a gray tile hearth with a black flue to the ceiling peak. Two big picture windows to the woods. Built-in bench under the left window. Low white open shelving between stove and right window. Round black pedestal table with two barrel chairs. Gray slate floor. One saucer pendant hanging from the vault."
+}

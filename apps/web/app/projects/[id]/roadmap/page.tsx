@@ -1,3 +1,4 @@
+import { sampleOnly } from '@/lib/sample-only';
 import { Chip, MoneyRange, type Tone } from '@foyer/ui';
 import {
   EFFORT_LABEL,
@@ -16,7 +17,8 @@ const PERMIT_TONE: Record<Permit, Tone> = {
   UNKNOWN: 'brass',
 };
 
-export default function RoadmapPage() {
+export default async function RoadmapPage({ params }: { params: Promise<{ id: string }> }) {
+  await sampleOnly(params);
   return (
     <article>
       <header>

@@ -1,0 +1,22 @@
+{
+  "name": "Kitchen and dining",
+  "type": "Open kitchen-dining",
+  "widthIn": 228,
+  "lengthIn": 300,
+  "ceilingIn": 100,
+  "fixed": [
+    "Ceiling beam where an older wall was removed",
+    "Range and chimney hood on side wall",
+    "Washer under counter",
+    "Sliding doors to patio",
+    "Built-in bookcase on left wall"
+  ],
+  "movable": [
+    "Farmhouse table and bench",
+    "Island",
+    "American fridge-freezer",
+    "Rug",
+    "Hanging plants"
+  ],
+  "description": "Single-story house, kitchen and dining combined. A previous owner removed a wall and left a visible ceiling beam between the dining end and the kitchen. Peninsula island with butcher block top. Black range cooker under a chimney hood. Washing machine sits under the kitchen counter. Black double fridge at right. Long reclaimed table and bench run the length of the room toward a floor-to-ceiling bookcase. Sliders open to the garden at the back. Dark stained wood floor."
+}

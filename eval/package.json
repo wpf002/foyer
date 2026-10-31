@@ -6,6 +6,7 @@
   "scripts": {
     "eval": "tsx --env-file-if-exists=../.env src/run.ts",
     "blind": "tsx src/blind.ts",
+    "calibrate": "tsx src/calibrate.ts",
     "test": "tsx --test test/*.test.ts",
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",

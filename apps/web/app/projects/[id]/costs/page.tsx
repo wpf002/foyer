@@ -1,7 +1,9 @@
+import { sampleOnly } from '@/lib/sample-only';
 import { money, MoneyRange, RangeBar } from '@foyer/ui';
 import { PHASES, project, roadmap, totals } from '@/lib/mock';
 
-export default function CostsPage() {
+export default async function CostsPage({ params }: { params: Promise<{ id: string }> }) {
+  await sampleOnly(params);
   const scaleMax = Math.max(totals.highCents, project.budgetHighCents);
   const pct = (c: number) => `${(c / scaleMax) * 100}%`;
 

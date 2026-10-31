@@ -1,0 +1,20 @@
+{
+  "name": "Bathroom",
+  "type": "Full bath",
+  "widthIn": 96,
+  "lengthIn": 120,
+  "ceilingIn": 96,
+  "fixed": [
+    "Tub with overhead shower",
+    "Wall-hung toilet with in-wall carrier",
+    "Floating vanity",
+    "Window over tub",
+    "Oak slat wall"
+  ],
+  "movable": [
+    "Mirror",
+    "Bath mat",
+    "Plant"
+  ],
+  "description": "Full bath, recent remodel. Large gray porcelain tile walls and floor, dark painted ceiling with surface-mount spots. Built-in tub with a rain head under the window. Wall-hung toilet between tub and vanity, with flush plate. Floating white vanity with an oak band. Vertical oak slat wall behind vanity and mirror, with LED strip."
+}

@@ -1,0 +1,16 @@
+{
+  "id": "019-stock-toddler-rental-room",
+  "source": "stock",
+  "tags": [
+    "renter",
+    "small-budget"
+  ],
+  "photos": [
+    {
+      "file": "kids-01.jpg",
+      "unsplashId": "iSO22I2l5uc",
+      "by": "Shoham Avisrur",
+      "license": "Unsplash License"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "Kitchen",
+  "type": "Condo kitchen",
+  "widthIn": 144,
+  "lengthIn": 156,
+  "ceilingIn": 102,
+  "fixed": [
+    "Walnut-veneer tall cabinet wall",
+    "Dark fluted island base",
+    "Sink on back wall",
+    "Concrete slab ceiling, condo building"
+  ],
+  "movable": [
+    "Linear LED pendant",
+    "Teal velvet stool",
+    "Glass-front display cabinet contents"
+  ],
+  "description": "Condo kitchen. Full-height walnut veneer cabinets with a smoked-glass display tower. Black fluted cabinetry and a black backsplash on the back wall. Island with a fluted black base and a pale oak top. One sculptural linear LED pendant. Light gray herringbone floor. No window in the kitchen zone."
+}

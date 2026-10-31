@@ -1,0 +1,16 @@
+{
+  "id": "013-stock-small-rental-bedroom",
+  "source": "stock",
+  "tags": [
+    "renter",
+    "small-budget"
+  ],
+  "photos": [
+    {
+      "file": "bedroom-03.jpg",
+      "unsplashId": "UvVHCAz9mFY",
+      "by": "Clay Banks",
+      "license": "Unsplash License"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "005-stock-open-plan-wall-kitchen",
+  "source": "stock",
+  "tags": [
+    "load-bearing",
+    "permit"
+  ],
+  "photos": [
+    {
+      "file": "kitchen-05.jpg",
+      "unsplashId": "in7sEZFeqEs",
+      "by": "Annie Spratt",
+      "license": "Unsplash License"
+    }
+  ]
+}

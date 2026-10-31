@@ -148,6 +148,14 @@ model Room {
   /// Fixed vs. movable separation from the vision pass. Gates every
   /// structural recommendation downstream, so it is stored, not inferred.
   fixedElements  Json?
+  movableElements Json?
+  /// What the room is, in the owner's words, merged with the vision read.
+  description    String?
+  /// Latest critique JSON (roomRead, problems, palette, leaveAlone). The
+  /// recommendations are also written as Recommendation rows.
+  critique       Json?
+  critiqueModel  String?
+  critiquedAt    DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -171,6 +179,9 @@ model Photo {
   roomId       String
   room         Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
   url          String
+  /// Local storage key under FOYER_UPLOAD_DIR. Null when url is remote.
+  storageKey   String?
+  mime         String?
   angle        PhotoAngle @default(UNKNOWN)
   /// Structured output of the vision pass: room read, proportions, existing
   /// finishes, style, and the fixed/movable split. Null until analyzed.
@@ -209,6 +220,8 @@ model Recommendation {
   /// that justifies it.
   briefAnswerId String
   briefAnswer   BriefAnswer @relation(fields: [briefAnswerId], references: [id], onDelete: Restrict)
+  /// Other brief questionIds that also support it. The primary stays in briefAnswerId.
+  supportingQuestionIds String[] @default([])
 
   category   RecommendationCategory
   title      String

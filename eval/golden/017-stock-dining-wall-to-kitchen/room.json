@@ -1,0 +1,22 @@
+{
+  "name": "Dining room",
+  "type": "Dining room",
+  "widthIn": 168,
+  "lengthIn": 192,
+  "ceilingIn": 110,
+  "fixed": [
+    "Wood-plank ceiling",
+    "Patterned tile wall panel",
+    "Floor-to-ceiling glass slider to garden",
+    "Wall to kitchen at left, load path unconfirmed"
+  ],
+  "movable": [
+    "Wood dining table",
+    "Six rattan chairs",
+    "Three woven pendants",
+    "Console",
+    "Plants",
+    "Rug"
+  ],
+  "description": "Dining room. Wood plank ceiling, white plaster walls. Centered patterned cement-tile panel on the back wall behind a long wood table with six bentwood rattan chairs. Three woven pendants over the table. Big glass slider to the garden on the right. Chevron wood floor. Kitchen is behind the left wall; you reach it through a hall door."
+}

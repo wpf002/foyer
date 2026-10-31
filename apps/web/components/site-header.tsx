@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Wordmark } from './wordmark';
+import { isSample } from '@/lib/api';
 import { project } from '@/lib/mock';
 
 const NAV = [
@@ -12,7 +13,7 @@ const NAV = [
 
 export function SiteHeader() {
   const path = usePathname();
-  const inProject = path.startsWith('/projects/');
+  const inSample = isSample(path.split('/')[2] ?? '') && path.startsWith('/projects/');
 
   return (
     <header className="no-print sticky top-0 z-30 border-b border-line bg-canvas/90 backdrop-blur-sm">
@@ -20,7 +21,7 @@ export function SiteHeader() {
         <Link href="/" className="text-ink transition-opacity hover:opacity-70">
           <Wordmark />
         </Link>
-        {inProject ? (
+        {inSample ? (
           <span className="hidden items-center gap-3 text-sm text-ink-muted sm:flex">
             <span className="h-4 w-px bg-line" />
             {project.name}

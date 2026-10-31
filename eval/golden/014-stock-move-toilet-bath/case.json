@@ -1,0 +1,15 @@
+{
+  "id": "014-stock-move-toilet-bath",
+  "source": "stock",
+  "tags": [
+    "permit"
+  ],
+  "photos": [
+    {
+      "file": "bath-01.jpg",
+      "unsplashId": "L4iRkKL5dng",
+      "by": "Backbone",
+      "license": "Unsplash License"
+    }
+  ]
+}

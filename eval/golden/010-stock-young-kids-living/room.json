@@ -1,0 +1,20 @@
+{
+  "name": "Living room",
+  "type": "Living room",
+  "widthIn": 156,
+  "lengthIn": 180,
+  "ceilingIn": 102,
+  "fixed": [
+    "Window seen in mirror reflection, opposite wall",
+    "Wood floor"
+  ],
+  "movable": [
+    "Cognac leather sectional",
+    "Round black coffee table",
+    "Ladder shelf",
+    "Arched mirror",
+    "Moroccan shag rug",
+    "Banana plant"
+  ],
+  "description": "Living room in a 2000s townhouse. Cognac leather sectional against a plain white wall, arched black mirror above. Round two-tier black coffee table. Black ladder shelf with a lamp and books at left. Large banana plant in the corner. Cream and black shag rug over wood floor."
+}

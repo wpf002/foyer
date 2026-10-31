@@ -1,3 +1,4 @@
+import { sampleOnly } from '@/lib/sample-only';
 import Link from 'next/link';
 import { Chip, cx, Material, type Finish } from '@foyer/ui';
 import { artifacts } from '@/lib/mock';
@@ -12,7 +13,7 @@ const COVER: Record<string, Finish> = {
 };
 
 export default async function ArtifactsPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+  const id = await sampleOnly(params);
 
   return (
     <article>

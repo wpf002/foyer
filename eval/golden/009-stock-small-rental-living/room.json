@@ -1,0 +1,21 @@
+{
+  "name": "Living room",
+  "type": "Studio living area",
+  "widthIn": 132,
+  "lengthIn": 156,
+  "ceilingIn": 96,
+  "fixed": [
+    "Floor-to-ceiling window with sheer curtains",
+    "Rental white walls"
+  ],
+  "movable": [
+    "Gray loveseat",
+    "Two wood drum tables",
+    "Pouf",
+    "Floor lamp",
+    "Two framed prints",
+    "Round rug",
+    "Plants"
+  ],
+  "description": "Living area of a one-bedroom rental. Pale gray loveseat against the long wall with two framed prints above. Two turned wood drum tables, a knit pouf, round textured rug. Floor-to-ceiling window at left with gray sheers. One floor lamp. Tile floor."
+}
