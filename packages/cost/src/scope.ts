@@ -1,5 +1,6 @@
 import { staticAdapter, type BaselineLine } from './baseline';
 import { regionFactor, type RegionBasis } from './region';
+import type { ScanSummary } from './scan';
 
 /**
  * Turns a recommendation into a priced scope: work type, quantity, and the
@@ -10,7 +11,14 @@ export interface ScopeInput {
   title: string;
   rationale: string;
   category: string;
-  room?: { type?: string; widthIn?: number | null; lengthIn?: number | null; ceilingIn?: number | null };
+  room?: {
+    type?: string;
+    widthIn?: number | null;
+    lengthIn?: number | null;
+    ceilingIn?: number | null;
+    /** Measured areas replace the box estimate when present. */
+    scan?: Pick<ScanSummary, 'floorSqft' | 'wallSqft' | 'perimeterFt'> | null;
+  };
 }
 
 export interface Scope {
@@ -50,6 +58,16 @@ export function geometry(room: ScopeInput['room']): Geometry {
   const w = room?.widthIn ?? 0;
   const l = room?.lengthIn ?? 0;
   const h = room?.ceilingIn ?? 96;
+  const s = room?.scan;
+  if (s && s.floorSqft > 0 && s.wallSqft > 0) {
+    return {
+      floor: s.floorSqft,
+      wall: s.wallSqft,
+      perimeter: s.perimeterFt,
+      measured: true,
+      label: w > 0 && l > 0 ? `scanned ${ft(w)} × ${ft(l)} × ${ft(h)}` : 'scanned',
+    };
+  }
   if (w > 0 && l > 0) {
     const perimeter = (2 * (w + l)) / 12;
     return {

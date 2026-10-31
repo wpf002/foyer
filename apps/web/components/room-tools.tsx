@@ -79,14 +79,17 @@ export function RoomTools({
   photos,
   canCritique,
   critiqued,
+  scanned,
 }: {
   roomId: string;
   photos: number;
+  scanned: boolean;
   canCritique: boolean;
   critiqued: boolean;
 }) {
   const { run, busy, error } = useAction();
   const file = useRef<HTMLInputElement>(null);
+  const scanFile = useRef<HTMLInputElement>(null);
 
   return (
     <div className="mt-7">
@@ -108,6 +111,29 @@ export function RoomTools({
         />
         <Button variant="secondary" size="sm" disabled={!!busy} onClick={() => file.current?.click()}>
           {busy === 'upload' ? 'Uploading…' : 'Add Photos'}
+        </Button>
+        <input
+          ref={scanFile}
+          type="file"
+          accept=".json,application/json"
+          hidden
+          onChange={(e) => {
+            const f = e.currentTarget.files?.[0];
+            e.currentTarget.value = '';
+            if (!f) return;
+            void run('scan', async () => {
+              const text = await f.text();
+              try {
+                JSON.parse(text);
+              } catch {
+                throw new Error(`${f.name} isn't JSON. Export the CapturedRoom from RoomPlan.`);
+              }
+              await send(`/rooms/${roomId}/scan`, { method: 'POST', body: text });
+            });
+          }}
+        />
+        <Button variant="secondary" size="sm" disabled={!!busy} onClick={() => scanFile.current?.click()}>
+          {busy === 'scan' ? 'Reading Scan…' : scanned ? 'Rescan' : 'Add Scan'}
         </Button>
         {photos > 0 ? (
           <Button

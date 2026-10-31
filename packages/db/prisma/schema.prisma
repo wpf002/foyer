@@ -151,6 +151,8 @@ model Room {
   ceilingIn      Int?
   /// Captured by LiDAR scan rather than typed or guessed from a photo.
   dimsFromScan   Boolean  @default(false)
+  /// ScanSummary from a RoomPlan export: net wall area, floor area, openings.
+  scan           Json?
   /// Fixed vs. movable separation from the vision pass. Gates every
   /// structural recommendation downstream, so it is stored, not inferred.
   fixedElements  Json?

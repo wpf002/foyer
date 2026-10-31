@@ -19,7 +19,7 @@ import {
   type RoomInput,
 } from '@foyer/rubric';
 import { boardOf } from '@foyer/artifacts';
-import { regionFactor } from '@foyer/cost';
+import { readScan, regionFactor } from '@foyer/cost';
 import { priceProject } from '../pricing';
 
 const ROOM_TYPES: RoomType[] = ['KITCHEN', 'BATHROOM', 'LIVING', 'DINING', 'BEDROOM', 'ENTRY', 'OFFICE', 'BASEMENT', 'OUTDOOR', 'OTHER'];
@@ -275,11 +275,37 @@ export async function projectRoutes(app: FastifyInstance) {
       const v = inches(b[k]);
       if (v !== undefined) data[k] = v;
     }
+    // Typed dimensions replace the scan.
+    if (['widthIn', 'lengthIn', 'ceilingIn'].some((k) => k in data)) {
+      data.dimsFromScan = false;
+      data.scan = Prisma.DbNull;
+    }
     if ('fixed' in b) data.fixedElements = strList(b.fixed);
     if ('movable' in b) data.movableElements = strList(b.movable);
     if (typeof b.description === 'string') data.description = b.description.trim() || null;
     await prisma.room.update({ where: { id: r.id }, data });
     return { ok: true };
+  });
+
+  // RoomPlan CapturedRoom JSON. Exports run a few hundred KB.
+  app.post<{ Params: { id: string }; Body: unknown }>('/rooms/:id/scan', { bodyLimit: 8 * 1024 * 1024 }, async (req, reply) => {
+    const r = await ownedRoom(req.params.id);
+    if (!r) return bad(reply, 'not_found', 404);
+    const scan = readScan(req.body);
+    if (!scan) return bad(reply, 'No walls in this scan. Export a RoomPlan CapturedRoom JSON.', 422);
+    await prisma.room.update({
+      where: { id: r.id },
+      data: {
+        widthIn: scan.widthIn,
+        lengthIn: scan.lengthIn,
+        ceilingIn: scan.ceilingIn,
+        dimsFromScan: true,
+        scan: scan as unknown as Prisma.InputJsonValue,
+      },
+    });
+    const repriced = (await prisma.roadmapItem.count({ where: { projectId: r.projectId } })) > 0;
+    if (repriced) await priceProject(r.projectId);
+    return { scan, repriced };
   });
 
   app.post<{ Params: { id: string } }>('/rooms/:id/photos', async (req, reply) => {

@@ -1,5 +1,5 @@
 import { prisma } from '@foyer/db';
-import { price, scopeOf } from '@foyer/cost';
+import { price, scanOf, scopeOf } from '@foyer/cost';
 
 /** Real quotes and invoices count toward the flywheel for two years. */
 const WINDOW_MS = 2 * 365 * 24 * 3600 * 1000;
@@ -45,7 +45,7 @@ export async function priceProject(projectId: string): Promise<{ priced: number;
   let unpriced = 0;
   for (const item of p.roadmapItems) {
     const rec = item.recommendation;
-    const scope = rec && scopeOf({ title: rec.title, rationale: rec.rationale, category: rec.category, room: rec.room ?? undefined });
+    const scope = rec && scopeOf({ title: rec.title, rationale: rec.rationale, category: rec.category, room: rec.room ? { ...rec.room, scan: scanOf(rec.room.scan) } : undefined });
     const r = scope && price(scope, p.zip, await local(scope.workType));
     if (!rec || !r) {
       unpriced++;

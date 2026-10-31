@@ -96,9 +96,9 @@ Spend caps are enforced before every call in `packages/ai/src/spend.ts`, per use
 | 2 | Roadmap sequencing and dependency reasoning | Built |
 | 3 | Cost engine on zip region factors, flywheel writes | Built |
 | 4 | Handoff artifacts and PDF export | Built |
-| 5 | Pro accounts |  |
+| 5 | Pro accounts | Built |
 | 6 | Material boards, locked to a recommendation | Built |
-| 7 | Scan based dimensions |  |
+| 7 | Scan based dimensions | Built |
 | 8 | Cost data as a product |  |
 
 ## Costs
@@ -127,6 +127,14 @@ a recommendation names and lays them out as swatches. It reads nothing else, so 
 something the recommendation doesn't say. No model calls. An unchanged board isn't written twice.
 
 Photoreal concept renders need an image model provider, which hasn't been chosen.
+
+## Scans
+
+`POST /v1/rooms/:id/scan` takes an Apple RoomPlan `CapturedRoom` JSON export.
+`packages/cost/src/scan.ts` reads walls, doors, windows, openings, and floor polygons in meters and
+returns width, length, ceiling, floor area, and wall area net of openings. The room's dimensions are
+overwritten and marked `dimsFromScan`. Pricing uses the measured areas in place of the 15% opening
+allowance, and the roadmap reprices on upload. Typing dimensions clears the scan.
 
 ## Commands
 

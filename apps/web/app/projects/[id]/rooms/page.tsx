@@ -97,7 +97,9 @@ function Photo({ room }: { room: ApiRoom }) {
   const first = room.photos[0];
   const dims = [feetInches(room.widthIn), feetInches(room.lengthIn)].filter(Boolean).join(' × ');
   const ceiling = feetInches(room.ceilingIn);
-  const caption = [dims, ceiling ? `${ceiling} Ceiling` : null].filter(Boolean).join(' · ');
+  const caption = [dims, ceiling ? `${ceiling} Ceiling` : null, dims && room.dimsFromScan ? 'Scanned' : null]
+    .filter(Boolean)
+    .join(' · ');
   return (
     <figure className="relative aspect-[4/3] overflow-hidden rounded-md bg-sunken lg:aspect-auto lg:h-full lg:min-h-[19rem]">
       {first ? (
@@ -111,6 +113,26 @@ function Photo({ room }: { room: ApiRoom }) {
         </figcaption>
       ) : null}
     </figure>
+  );
+}
+
+/** Measured from the scan. Replaces the box estimate in pricing. */
+function ScanStats({ scan }: { scan: NonNullable<ApiRoom['scan']> }) {
+  const stats: [string, string][] = [
+    ['Floor', `${scan.floorSqft} sq ft`],
+    ['Walls', `${scan.wallSqft} sq ft`],
+    ['Doors', String(scan.doors)],
+    ['Windows', String(scan.windows)],
+  ];
+  return (
+    <dl className="mt-7 grid grid-cols-2 border-y border-line sm:grid-cols-4">
+      {stats.map(([k, v], i) => (
+        <div key={k} className={i ? 'py-3 sm:border-l sm:border-line sm:pl-4' : 'py-3'}>
+          <dt className="eyebrow">{k}</dt>
+          <dd className="mt-1 font-display text-xl text-ink tabular-nums">{v}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
@@ -138,6 +160,7 @@ function LiveRooms({ project }: { project: ApiProject }) {
                   </span>
                 </div>
                 {read ? <p className="mt-4 max-w-[58ch] text-ink-muted">{read}</p> : null}
+                {room.dimsFromScan && room.scan ? <ScanStats scan={room.scan} /> : null}
 
                 {fixed.length || movable.length ? (
                   <div className="mt-7 grid gap-6 xl:grid-cols-2">
@@ -182,6 +205,7 @@ function LiveRooms({ project }: { project: ApiProject }) {
                   photos={room.photos.length}
                   canCritique={briefDone && (!!room.description || fixed.length > 0)}
                   critiqued={!!room.critiquedAt}
+                  scanned={room.dimsFromScan}
                 />
               </div>
             </section>

@@ -42,6 +42,20 @@ export interface ApiRecommendation {
   board: Board | null;
 }
 
+/** Mirrors ScanSummary in @foyer/cost. */
+export interface ApiScan {
+  widthIn: number;
+  lengthIn: number;
+  ceilingIn: number;
+  floorSqft: number;
+  wallSqft: number;
+  perimeterFt: number;
+  walls: number;
+  doors: number;
+  windows: number;
+  openings: number;
+}
+
 export interface ApiRoom {
   id: string;
   name: string;
@@ -49,6 +63,8 @@ export interface ApiRoom {
   widthIn: number | null;
   lengthIn: number | null;
   ceilingIn: number | null;
+  dimsFromScan: boolean;
+  scan: ApiScan | null;
   fixedElements: string[] | null;
   movableElements: string[] | null;
   description: string | null;
