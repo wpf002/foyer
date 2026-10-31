@@ -9,6 +9,7 @@ import { project } from '@/lib/mock';
 const NAV = [
   { href: '/projects', label: 'Projects' },
   { href: '/projects/prescott', label: 'Sample' },
+  { href: '/cost-index', label: 'Cost Index' },
   { href: '/account', label: 'Account' },
   { href: '/intake', label: 'Start A Plan' },
 ];

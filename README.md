@@ -99,7 +99,7 @@ Spend caps are enforced before every call in `packages/ai/src/spend.ts`, per use
 | 5 | Pro accounts | Built |
 | 6 | Material boards, locked to a recommendation | Built |
 | 7 | Scan based dimensions | Built |
-| 8 | Cost data as a product |  |
+| 8 | Cost data as a product | Built |
 
 ## Costs
 
@@ -109,6 +109,14 @@ factors are approximations; there's no licensed cost feed yet.
 
 Every estimate and every logged quote writes a `CostDataPoint`. Once a zip3 and work type have 5
 local points, the range blends toward their median, weighted n/(n+20).
+
+## Cost Index
+
+`GET /v1/cost/index` aggregates logged quotes and invoices from the last two years by zip3 and
+work type: per-unit low, median, and high (25th, 50th, 75th percentile) against the regional
+baseline. `GET /v1/cost/index.csv` exports the same cells. Both take `zip3` and `workType` filters.
+A cell needs 5 points to publish, so no single job can be read back out of it. The web page is
+`/cost-index`. Built in `packages/cost/src/market.ts`, pure and unit tested.
 
 ## Handoff
 

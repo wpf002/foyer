@@ -3,3 +3,4 @@ export * from './region';
 export * from './estimate';
 export * from './scope';
 export * from './scan';
+export * from './market';

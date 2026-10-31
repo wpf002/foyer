@@ -214,3 +214,27 @@ export function feetInches(inches: number | null): string | null {
   if (!inches) return null;
   return `${Math.floor(inches / 12)}′${inches % 12}″`;
 }
+
+/** Mirrors CostIndex in @foyer/cost. */
+export interface ApiIndexCell {
+  zip3: string;
+  workType: string;
+  label: string;
+  unit: string;
+  n: number;
+  invoices: number;
+  p25Cents: number;
+  medianCents: number;
+  p75Cents: number;
+  baselineCents: number;
+  delta: number;
+  lastObserved: string;
+}
+
+export interface ApiCostIndex {
+  cells: ApiIndexCell[];
+  points: number;
+  regions: number;
+  workTypes: number;
+  suppressed: number;
+}
