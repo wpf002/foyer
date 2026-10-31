@@ -40,6 +40,8 @@ export interface ApiRecommendation {
   effort: Effort;
   needsProReview: boolean;
   board: Board | null;
+  /** Latest photoreal concept. Directional only. */
+  concept?: { id: string; url: string; createdAt: string } | null;
 }
 
 /** Mirrors ScanSummary in @foyer/cost. */

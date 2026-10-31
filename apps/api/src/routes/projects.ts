@@ -30,7 +30,7 @@ const MIMES: Record<string, { ext: string; mime: ImageMime }> = {
 };
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 
-const uploadDir = () => path.resolve(process.env.FOYER_UPLOAD_DIR ?? path.join(process.cwd(), '../../.uploads'));
+export const uploadDir = () => path.resolve(process.env.FOYER_UPLOAD_DIR ?? path.join(process.cwd(), '../../.uploads'));
 
 /** Phase 1 has one local user and no auth. */
 const DEV_EMAIL = 'dev@foyer.local';
@@ -84,7 +84,12 @@ const projectInclude = {
         orderBy: { priority: 'asc' },
         include: {
           briefAnswer: { select: { questionId: true } },
-          renders: { where: { kind: 'MATERIAL_BOARD' }, orderBy: { createdAt: 'desc' }, take: 1, select: { provenance: true } },
+          renders: {
+            where: { kind: { in: ['MATERIAL_BOARD', 'CONCEPT'] } },
+            orderBy: { createdAt: 'desc' },
+            take: 8,
+            select: { id: true, kind: true, provenance: true, createdAt: true },
+          },
         },
       },
     },
@@ -103,6 +108,10 @@ const projectInclude = {
     },
   },
 } satisfies Prisma.ProjectInclude;
+
+function conceptOf(r: { id: string; createdAt: Date } | undefined) {
+  return r ? { id: r.id, url: `/v1/renders/${r.id}/file`, createdAt: r.createdAt } : null;
+}
 
 export async function ownedProject(id: string) {
   return prisma.project.findFirst({ where: { id, userId: await userId() }, include: projectInclude });
@@ -126,7 +135,8 @@ function serializeProject(p: NonNullable<Awaited<ReturnType<typeof ownedProject>
       recommendations: r.recommendations.map(({ briefAnswer, renders, ...rec }) => ({
         ...rec,
         citation: briefAnswer.questionId,
-        board: boardOf(renders[0]?.provenance ?? null),
+        board: boardOf(renders.find((x) => x.kind === 'MATERIAL_BOARD')?.provenance ?? null),
+        concept: conceptOf(renders.find((x) => x.kind === 'CONCEPT')),
       })),
     })),
   };

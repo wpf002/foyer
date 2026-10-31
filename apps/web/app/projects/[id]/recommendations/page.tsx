@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 import { buildBoard } from '@foyer/artifacts';
-import { Chip, Trace, type Finish } from '@foyer/ui';
+import { Chip, cx, Trace, type Finish } from '@foyer/ui';
 import { BoardColumn, BoardSpecs } from '@/components/board';
-import { DrawBoards } from '@/components/render-tools';
+import { DrawBoards, DrawConcept } from '@/components/render-tools';
 import { api, isSample, type ApiProject } from '@/lib/api';
 import {
   answerFor,
@@ -116,7 +116,13 @@ function LiveRecommendations({ project }: { project: ApiProject }) {
             </h3>
             <ol className="mt-5 space-y-5">
               {group.map(({ rec, room }) => (
-                <li key={rec.id} className="card card-lift grid gap-6 p-6 sm:grid-cols-[7.5rem_1fr] sm:p-7">
+                <li
+                  key={rec.id}
+                  className={cx(
+                    'card card-lift grid gap-6 p-6 sm:grid-cols-[7.5rem_1fr] sm:p-7',
+                    rec.concept && 'lg:grid-cols-[7.5rem_1fr_19rem]',
+                  )}
+                >
                   <BoardColumn board={rec.board} fallback={CATEGORY_FINISH[cat]} />
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-1.5">
@@ -140,12 +146,26 @@ function LiveRecommendations({ project }: { project: ApiProject }) {
                         A licensed professional confirms this before any work starts.
                       </p>
                     ) : null}
-                    <div className="mt-5 flex flex-wrap gap-2">
-                      {[rec.citation, ...(rec.supportingQuestionIds ?? [])].map((q) => (
-                        <Trace key={q} questionId={q} label={SHORT[q] ?? prompts.get(q) ?? q} />
-                      ))}
+                    <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex flex-wrap gap-2">
+                        {[rec.citation, ...(rec.supportingQuestionIds ?? [])].map((q) => (
+                          <Trace key={q} questionId={q} label={SHORT[q] ?? prompts.get(q) ?? q} />
+                        ))}
+                      </div>
+                      {room.photos.length && !rec.needsProReview ? <DrawConcept recId={rec.id} again={!!rec.concept} /> : null}
                     </div>
                   </div>
+                  {rec.concept ? (
+                    <figure className="relative aspect-[4/3] overflow-hidden rounded-md bg-sunken sm:col-span-2 lg:col-span-1 lg:aspect-auto lg:min-h-[14rem]">
+                      <img src={`/api${rec.concept.url}`} alt={rec.title} className="absolute inset-0 size-full object-cover" />
+                      <figcaption
+                        className="absolute bottom-3 left-3 rounded-full bg-surface/90 px-3 py-1 text-xs font-medium text-ink backdrop-blur-sm"
+                        title="Shows direction, not a final design"
+                      >
+                        Directional
+                      </figcaption>
+                    </figure>
+                  ) : null}
                 </li>
               ))}
             </ol>

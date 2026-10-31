@@ -105,7 +105,8 @@ Spend caps are enforced before every call in `packages/ai/src/spend.ts`, per use
 
 Price = static baseline per unit × quantity × region factor. Quantity comes from room dimensions
 (`packages/cost/src/scope.ts`). Region resolves metro zip3, then state, then national 1.0. State
-factors are approximations; there's no licensed cost feed yet.
+factor = 0.55 × (state wage ÷ national wage) + 0.45, from BLS OEWS May 2025 annual mean wages for
+SOC 47-0000, Construction and Extraction. 0.55 is the labor share; materials price near national.
 
 Every estimate and every logged quote writes a `CostDataPoint`. Once a zip3 and work type have 5
 local points, the range blends toward their median, weighted n/(n+20).
@@ -134,7 +135,12 @@ A render is a `Render` row with a required `recommendationId`. Phase 6 draws mat
 a recommendation names and lays them out as swatches. It reads nothing else, so a board can't show
 something the recommendation doesn't say. No model calls. An unchanged board isn't written twice.
 
-Photoreal concept renders need an image model provider, which hasn't been chosen.
+Concept renders use fal.ai FLUX.1 Kontext (`packages/ai/src/render.ts`). `POST
+/v1/recommendations/:id/concept` edits the room's widest photo with a prompt built only from the
+recommendation's title, board specs, and what to keep. Walls, openings, and camera angle are held.
+Each render is a `CONCEPT` row marked directional, with model, seed, prompt hash, and source photo in
+provenance. Items flagged for pro review don't render. Set `FAL_KEY` in `.env`; each image counts
+$0.04 against the spend caps.
 
 ## Scans
 

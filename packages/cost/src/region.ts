@@ -1,6 +1,6 @@
 /**
  * Regional cost factor by zip. A metro zip3 hit is the closest read; past
- * that, a state approximation; past that, 1.0. Coarse on purpose: a
+ * that, a state factor from BLS construction wages; past that, 1.0. Coarse on purpose: a
  * wrong-by-15% multiplier beats a national average presented as local truth.
  * The flywheel replaces these zip by zip as real quotes accumulate.
  */
@@ -26,14 +26,20 @@ const ZIP3_STATE: [number, number, string][] = [
   [980, 994, 'WA'], [995, 999, 'AK'],
 ];
 
-/** Approximate residential cost index by state. National = 1.00. */
+/**
+ * State factor = 0.55 × (state wage ÷ national wage) + 0.45. Wages are BLS OEWS
+ * May 2025 annual means for SOC 47-0000, Construction and Extraction
+ * (series OEUS{fips}0000000000047000004, national $65,360). 0.55 is the labor
+ * share of a residential remodel; materials price near national.
+ */
+export const STATE_FACTOR_SOURCE = 'BLS OEWS May 2025, SOC 47-0000';
 const BY_STATE: Record<string, number> = {
-  AK: 1.25, AL: 0.84, AR: 0.83, AZ: 0.95, CA: 1.24, CO: 1.04, CT: 1.12, DC: 1.15, DE: 1.03,
-  FL: 0.94, GA: 0.9, HI: 1.3, IA: 0.92, ID: 0.93, IL: 1.06, IN: 0.92, KS: 0.89, KY: 0.88,
-  LA: 0.86, MA: 1.2, MD: 1.02, ME: 0.98, MI: 0.96, MN: 1.05, MO: 0.94, MS: 0.82, MT: 0.92,
-  NC: 0.88, ND: 0.92, NE: 0.9, NH: 1.02, NJ: 1.15, NM: 0.9, NV: 1.02, NY: 1.12, OH: 0.93,
-  OK: 0.86, OR: 1.05, PA: 1.02, RI: 1.1, SC: 0.87, SD: 0.88, TN: 0.88, TX: 0.9, UT: 0.95,
-  VA: 0.97, VT: 1.0, WA: 1.1, WI: 1.0, WV: 0.92, WY: 0.92,
+  AK: 1.13, AL: 0.88, AR: 0.86, AZ: 0.96, CA: 1.11, CO: 1.0, CT: 1.06, DC: 1.07, DE: 0.98,
+  FL: 0.92, GA: 0.92, HI: 1.16, IA: 0.97, ID: 0.95, IL: 1.14, IN: 1.01, KS: 0.96, KY: 0.94,
+  LA: 0.91, MA: 1.13, MD: 1.0, ME: 0.98, MI: 1.0, MN: 1.08, MO: 1.02, MS: 0.88, MT: 0.99, NC: 0.91,
+  ND: 1.01, NE: 0.94, NH: 0.99, NJ: 1.13, NM: 0.92, NV: 1.03, NY: 1.09, OH: 1.0, OK: 0.91,
+  OR: 1.09, PA: 1.01, RI: 1.04, SC: 0.92, SD: 0.91, TN: 0.93, TX: 0.91, UT: 0.95, VA: 0.95,
+  VT: 0.97, WA: 1.14, WI: 1.04, WV: 0.95, WY: 0.99,
 };
 
 export type RegionBasis = 'metro' | 'state' | 'national';

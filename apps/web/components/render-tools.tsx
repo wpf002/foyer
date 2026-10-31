@@ -20,3 +20,20 @@ export function DrawBoards({ projectId, again }: { projectId: string; again: boo
     </div>
   );
 }
+
+export function DrawConcept({ recId, again }: { recId: string; again: boolean }) {
+  const { run, busy, error } = useAction();
+  return (
+    <div className="flex items-center gap-3">
+      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      <Button
+        variant="ghost"
+        size="sm"
+        disabled={!!busy}
+        onClick={() => void run('concept', () => send(`/recommendations/${recId}/concept`, { method: 'POST' }))}
+      >
+        {busy ? 'Rendering…' : again ? 'Redraw Concept' : 'Draw Concept'}
+      </Button>
+    </div>
+  );
+}
