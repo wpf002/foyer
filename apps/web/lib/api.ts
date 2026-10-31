@@ -70,6 +70,18 @@ export interface ApiRoadmapItem {
   highCents: number | null;
   riskNote: string | null;
   dependsOn: { prerequisiteId: string; reason: string }[];
+  cost: ApiCost | null;
+}
+
+export interface ApiCost {
+  midCents: number;
+  source: 'BASELINE_STATIC' | 'FOYER_FLYWHEEL' | string;
+  regionFactor: number;
+  workType: string | null;
+  quantity: number | null;
+  basis: string | null;
+  localPoints: number;
+  actualCents: number | null;
 }
 
 export interface ApiProject {
@@ -80,6 +92,7 @@ export interface ApiProject {
   budgetLowCents: number | null;
   budgetHighCents: number | null;
   updatedAt: string;
+  region: { factor: number; basis: 'metro' | 'state' | 'national'; state: string | null };
   brief: { completedAt: string | null; answers: ApiAnswer[] } | null;
   rooms: ApiRoom[];
   roadmapItems: ApiRoadmapItem[];

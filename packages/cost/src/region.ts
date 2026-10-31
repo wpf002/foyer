@@ -1,7 +1,8 @@
 /**
- * Regional cost factor by zip prefix. Coarse on purpose: a wrong-by-15%
- * multiplier beats a national average presented as local truth. The flywheel
- * replaces this table zip by zip as real quotes accumulate.
+ * Regional cost factor by zip. A metro zip3 hit is the closest read; past
+ * that, a state approximation; past that, 1.0. Coarse on purpose: a
+ * wrong-by-15% multiplier beats a national average presented as local truth.
+ * The flywheel replaces these zip by zip as real quotes accumulate.
  */
 const BY_ZIP3: Record<string, number> = {
   '946': 1.40, '945': 1.36, '941': 1.42, '940': 1.38, '100': 1.46, '112': 1.33, '021': 1.31,
@@ -10,8 +11,43 @@ const BY_ZIP3: Record<string, number> = {
   '432': 0.88, '481': 0.92, '352': 0.84,
 };
 
-export function regionFactor(zip: string): { factor: number; exact: boolean } {
-  const p = zip.slice(0, 3);
-  const hit = BY_ZIP3[p];
-  return hit ? { factor: hit, exact: true } : { factor: 1.0, exact: false };
+/** [first zip3, last zip3, state]. USPS prefix blocks. */
+const ZIP3_STATE: [number, number, string][] = [
+  [10, 27, 'MA'], [28, 29, 'RI'], [30, 38, 'NH'], [39, 49, 'ME'], [50, 59, 'VT'], [60, 69, 'CT'],
+  [70, 89, 'NJ'], [100, 149, 'NY'], [150, 196, 'PA'], [197, 199, 'DE'], [200, 205, 'DC'],
+  [206, 219, 'MD'], [220, 246, 'VA'], [247, 268, 'WV'], [270, 289, 'NC'], [290, 299, 'SC'],
+  [300, 319, 'GA'], [320, 349, 'FL'], [350, 369, 'AL'], [370, 385, 'TN'], [386, 397, 'MS'],
+  [398, 399, 'GA'], [400, 427, 'KY'], [430, 458, 'OH'], [460, 479, 'IN'], [480, 499, 'MI'],
+  [500, 528, 'IA'], [530, 549, 'WI'], [550, 567, 'MN'], [570, 577, 'SD'], [580, 588, 'ND'],
+  [590, 599, 'MT'], [600, 629, 'IL'], [630, 658, 'MO'], [660, 679, 'KS'], [680, 693, 'NE'],
+  [700, 714, 'LA'], [716, 729, 'AR'], [730, 749, 'OK'], [750, 799, 'TX'], [800, 816, 'CO'],
+  [820, 831, 'WY'], [832, 838, 'ID'], [840, 847, 'UT'], [850, 865, 'AZ'], [870, 884, 'NM'],
+  [885, 885, 'TX'], [889, 898, 'NV'], [900, 961, 'CA'], [967, 968, 'HI'], [970, 979, 'OR'],
+  [980, 994, 'WA'], [995, 999, 'AK'],
+];
+
+/** Approximate residential cost index by state. National = 1.00. */
+const BY_STATE: Record<string, number> = {
+  AK: 1.25, AL: 0.84, AR: 0.83, AZ: 0.95, CA: 1.24, CO: 1.04, CT: 1.12, DC: 1.15, DE: 1.03,
+  FL: 0.94, GA: 0.9, HI: 1.3, IA: 0.92, ID: 0.93, IL: 1.06, IN: 0.92, KS: 0.89, KY: 0.88,
+  LA: 0.86, MA: 1.2, MD: 1.02, ME: 0.98, MI: 0.96, MN: 1.05, MO: 0.94, MS: 0.82, MT: 0.92,
+  NC: 0.88, ND: 0.92, NE: 0.9, NH: 1.02, NJ: 1.15, NM: 0.9, NV: 1.02, NY: 1.12, OH: 0.93,
+  OK: 0.86, OR: 1.05, PA: 1.02, RI: 1.1, SC: 0.87, SD: 0.88, TN: 0.88, TX: 0.9, UT: 0.95,
+  VA: 0.97, VT: 1.0, WA: 1.1, WI: 1.0, WV: 0.92, WY: 0.92,
+};
+
+export type RegionBasis = 'metro' | 'state' | 'national';
+
+export function stateOf(zip: string): string | null {
+  const n = Number(zip.slice(0, 3));
+  if (!Number.isFinite(n)) return null;
+  return ZIP3_STATE.find(([a, b]) => n >= a && n <= b)?.[2] ?? null;
+}
+
+export function regionFactor(zip: string): { factor: number; exact: boolean; basis: RegionBasis; state: string | null } {
+  const state = stateOf(zip);
+  const hit = BY_ZIP3[zip.slice(0, 3)];
+  if (hit) return { factor: hit, exact: true, basis: 'metro', state };
+  const s = state ? BY_STATE[state] : undefined;
+  return s ? { factor: s, exact: false, basis: 'state', state } : { factor: 1.0, exact: false, basis: 'national', state };
 }

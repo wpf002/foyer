@@ -35,6 +35,9 @@
   --color-brass-soft: var(--brass-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
+  --color-brass-lit: var(--brass-lit);
+  --color-brass-dim: var(--brass-dim);
+  --color-clay-lit: var(--clay-lit);
 
   --radius-xs: var(--r-xs);
   --radius-sm: var(--r-sm);

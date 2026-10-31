@@ -268,6 +268,13 @@ model CostEstimate {
   source           CostSource
   /// Regional multiplier applied to the national baseline for this zip.
   regionFactor     Float      @default(1.0)
+  /// The priced scope: which baseline line, how many units, and how the
+  /// quantity was reached. Kept so a quote can be stored per unit.
+  workType         String?
+  quantity         Float?
+  basis            String?
+  /// Local flywheel points blended in. 0 means pure baseline.
+  localPoints      Int        @default(0)
   /// Set once a real quote or invoice comes back. Feeds the flywheel.
   actualCents      Int?
   createdAt        DateTime   @default(now())

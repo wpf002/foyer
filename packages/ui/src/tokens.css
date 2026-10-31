@@ -48,6 +48,11 @@
   --danger: #95271c;
   --danger-soft: #f7e3df;
 
+  /* On the espresso ground ----------------------------------------------- */
+  --brass-lit: #e3c98a;
+  --brass-dim: #c9a95e;
+  --clay-lit: #e08a62;
+
   /* Material base colours, used by the finish surfaces below -------------- */
   --m-plaster: #e9e2d4;
   --m-oak: #caa871;

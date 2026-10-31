@@ -91,6 +91,9 @@ importers:
       '@foyer/ai':
         specifier: workspace:*
         version: link:../packages/ai
+      '@foyer/cost':
+        specifier: workspace:*
+        version: link:../packages/cost
       '@foyer/rubric':
         specifier: workspace:*
         version: link:../packages/rubric

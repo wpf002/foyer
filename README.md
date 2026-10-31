@@ -46,7 +46,7 @@ written into `packages/rubric/src/prompts.ts` and enforced by the judge's safety
 
 ```
 apps/web         Next.js app. Intake, brief, rooms, recommendations, roadmap, costs, artifacts.
-apps/api         Fastify. Health and cost endpoints today.
+apps/api         Fastify. Projects, critique, roadmap, pricing, quotes.
 packages/db      Prisma schema and client. The invariants live here.
 packages/ai      Claude client, model tiering, spend ledger.
 packages/rubric  Design rubric, problem vocabulary, critique and judge prompts.
@@ -71,8 +71,8 @@ Then:
 pnpm dev
 ```
 
-Web runs on 3000, API on 4000. The web app renders from `apps/web/lib/mock.ts` until Phase 1 wires
-the critique chain, so every screen works without a database.
+Web runs on 3000, API on 4000. The sample project (`/projects/prescott`) renders from
+`apps/web/lib/mock.ts`. Every other project reads from the API.
 
 ## Environment
 
@@ -94,12 +94,21 @@ Spend caps are enforced before every call in `packages/ai/src/spend.ts`, per use
 | 0 | Monorepo, data model, AI gateway, eval harness, design system, screens | Done |
 | 1 | Intake persistence, photo analysis, the critique chain | Done |
 | 2 | Roadmap sequencing and dependency reasoning | Built |
-| 3 | Cost engine on real zip data, flywheel writes |  |
+| 3 | Cost engine on zip region factors, flywheel writes | Built |
 | 4 | Handoff artifacts and PDF export |  |
 | 5 | Pro accounts |  |
 | 6 | Renders, locked to a recommendation |  |
 | 7 | Scan based dimensions |  |
 | 8 | Cost data as a product |  |
+
+## Costs
+
+Price = static baseline per unit × quantity × region factor. Quantity comes from room dimensions
+(`packages/cost/src/scope.ts`). Region resolves metro zip3, then state, then national 1.0. State
+factors are approximations; there's no licensed cost feed yet.
+
+Every estimate and every logged quote writes a `CostDataPoint`. Once a zip3 and work type have 5
+local points, the range blends toward their median, weighted n/(n+20).
 
 ## Commands
 

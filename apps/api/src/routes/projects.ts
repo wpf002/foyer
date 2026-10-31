@@ -18,6 +18,8 @@ import {
   type ParsedAnswer,
   type RoomInput,
 } from '@foyer/rubric';
+import { regionFactor } from '@foyer/cost';
+import { priceProject } from '../pricing';
 
 const ROOM_TYPES: RoomType[] = ['KITCHEN', 'BATHROOM', 'LIVING', 'DINING', 'BEDROOM', 'ENTRY', 'OFFICE', 'BASEMENT', 'OUTDOOR', 'OTHER'];
 const MIMES: Record<string, { ext: string; mime: ImageMime }> = {
@@ -82,7 +84,16 @@ const projectInclude = {
   },
   roadmapItems: {
     orderBy: [{ phase: 'asc' }, { order: 'asc' }],
-    include: { dependsOn: { select: { prerequisiteId: true, reason: true } } },
+    include: {
+      dependsOn: { select: { prerequisiteId: true, reason: true } },
+      recommendation: {
+        select: {
+          costEstimate: {
+            select: { midCents: true, source: true, regionFactor: true, workType: true, quantity: true, basis: true, localPoints: true, actualCents: true },
+          },
+        },
+      },
+    },
   },
 } satisfies Prisma.ProjectInclude;
 
@@ -100,6 +111,8 @@ async function ownedRoom(id: string) {
 function serializeProject(p: NonNullable<Awaited<ReturnType<typeof ownedProject>>>) {
   return {
     ...p,
+    region: regionFactor(p.zip),
+    roadmapItems: p.roadmapItems.map(({ recommendation, ...it }) => ({ ...it, cost: recommendation?.costEstimate ?? null })),
     rooms: p.rooms.map((r) => ({
       ...r,
       photos: r.photos.map(({ storageKey: _k, ...ph }) => ({ ...ph, url: `/v1/photos/${ph.id}/file` })),
@@ -420,6 +433,44 @@ export async function projectRoutes(app: FastifyInstance) {
         })),
       });
     });
-    return { items: roadmap.items.length, edges: roadmap.edges.length, adjusted: roadmap.notes.length, model, costUsd: usage.costUsd };
+    const costs = await priceProject(p.id);
+    return { items: roadmap.items.length, edges: roadmap.edges.length, adjusted: roadmap.notes.length, ...costs, model, costUsd: usage.costUsd };
+  });
+
+  /** Reprices from the baseline and the flywheel. No model call. */
+  app.post<{ Params: { id: string } }>('/projects/:id/costs', async (req, reply) => {
+    const p = await ownedProject(req.params.id);
+    if (!p) return bad(reply, 'not_found', 404);
+    if (!p.roadmapItems.length) return bad(reply, 'Build the roadmap first', 409);
+    return priceProject(p.id);
+  });
+
+  /** A real quote or invoice. Feeds the flywheel per unit. */
+  app.post<{ Params: { id: string }; Body: { cents?: unknown; kind?: unknown } }>('/roadmap-items/:id/quote', async (req, reply) => {
+    const item = await prisma.roadmapItem.findFirst({
+      where: { id: req.params.id, project: { userId: await userId() } },
+      include: { project: { select: { zip: true } }, recommendation: { include: { costEstimate: true } } },
+    });
+    if (!item) return bad(reply, 'not_found', 404);
+    const cents = Math.round(Number(req.body?.cents));
+    const kind = req.body?.kind === 'ACTUAL' ? 'ACTUAL' : 'QUOTE';
+    if (!Number.isFinite(cents) || cents <= 0 || cents > 100_000_000) return bad(reply, 'cents must be a positive amount');
+    const est = item.recommendation?.costEstimate;
+    if (!est?.workType) return bad(reply, 'Price the roadmap first', 409);
+    await prisma.$transaction([
+      prisma.costDataPoint.create({
+        data: {
+          zip: item.project.zip,
+          workType: est.workType,
+          baselineCents: est.midCents,
+          quotedCents: kind === 'QUOTE' ? cents : null,
+          actualCents: kind === 'ACTUAL' ? cents : null,
+          source: 'USER_QUOTE',
+          quantity: est.quantity,
+        },
+      }),
+      prisma.costEstimate.update({ where: { id: est.id }, data: { actualCents: cents } }),
+    ]);
+    return { ok: true };
   });
 }
