@@ -4,7 +4,7 @@ import { buildArtifact, typeOfSlug, type ArtifactDoc } from '@foyer/artifacts';
 import { Material } from '@foyer/ui';
 import { ArtifactDocView } from '@/components/artifact-doc';
 import { PrintButton } from '@/components/print-button';
-import { api, isSample } from '@/lib/api';
+import { api, isSample, type ApiMe } from '@/lib/api';
 import { palette } from '@/lib/mock';
 import { sampleInput } from '@/lib/sample-artifacts';
 
@@ -15,10 +15,15 @@ export default async function ArtifactPage({ params }: { params: Promise<{ id: s
 
   let doc: ArtifactDoc;
   let version: number | undefined;
+  let me: ApiMe | null = null;
   if (isSample(id)) doc = buildArtifact(type, sampleInput());
   else {
-    const row = await api<{ version: number; doc: ArtifactDoc }>(`/projects/${id}/artifacts/${slug}`);
+    const [row, account] = await Promise.all([
+      api<{ version: number; doc: ArtifactDoc }>(`/projects/${id}/artifacts/${slug}`),
+      api<ApiMe>('/me'),
+    ]);
     if (!row) notFound();
+    me = account;
     doc = row.doc;
     version = row.version;
   }
@@ -47,7 +52,7 @@ export default async function ArtifactPage({ params }: { params: Promise<{ id: s
           <PrintButton />
         </div>
       </div>
-      <ArtifactDocView doc={doc} version={version} strip={strip} />
+      <ArtifactDocView doc={doc} version={version} strip={strip} preparedBy={me?.pro ? me : null} />
     </div>
   );
 }

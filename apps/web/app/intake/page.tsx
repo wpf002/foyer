@@ -1,12 +1,13 @@
 import { Material } from '@foyer/ui';
 import { IntakeForm } from '@/components/intake-form';
-import { api, type ApiQuestion } from '@/lib/api';
+import { api, type ApiMe, type ApiQuestion } from '@/lib/api';
 import { SECTIONS } from '@/lib/mock';
 
 export const dynamic = 'force-dynamic';
 
 export default async function IntakePage() {
-  const questions = (await api<ApiQuestion[]>('/questions')) ?? [];
+  const [qs, me] = await Promise.all([api<ApiQuestion[]>('/questions'), api<ApiMe>('/me')]);
+  const questions = qs ?? [];
   return (
     <div className="mx-auto grid max-w-[1240px] gap-10 px-6 py-12 lg:grid-cols-[14rem_1fr] lg:gap-16 lg:py-16">
       <aside className="no-print lg:sticky lg:top-24 lg:self-start">
@@ -40,7 +41,7 @@ export default async function IntakePage() {
           <p className="lede mt-5 max-w-[46ch]">Your own words. Fragments are fine.</p>
         </header>
 
-        <IntakeForm questions={questions} />
+        <IntakeForm questions={questions} pro={!!me?.pro} />
       </main>
     </div>
   );

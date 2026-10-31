@@ -17,7 +17,7 @@ function budgetRaw(f: FormData): string {
   return [band, flex ? `Flexible: ${flex}` : ''].filter(Boolean).join('. ');
 }
 
-export function IntakeForm({ questions }: { questions: ApiQuestion[] }) {
+export function IntakeForm({ questions, pro = false }: { questions: ApiQuestion[]; pro?: boolean }) {
   const router = useRouter();
   const [projectId, setProjectId] = useState<string | null>(null);
   const [step, setStep] = useState<string | null>(null);
@@ -41,7 +41,11 @@ export function IntakeForm({ questions }: { questions: ApiQuestion[] }) {
         setStep('Saving');
         id = (await send<{ id: string }>('/projects', {
           method: 'POST',
-          body: JSON.stringify({ name: f.get('name'), zip: f.get('zip') }),
+          body: JSON.stringify({
+            name: f.get('name'),
+            zip: f.get('zip'),
+            clientName: String(f.get('clientName') ?? '').trim() || undefined,
+          }),
         })).id;
         setProjectId(id);
       }
@@ -66,11 +70,17 @@ export function IntakeForm({ questions }: { questions: ApiQuestion[] }) {
     >
       <fieldset id="s-HOUSE" className="mt-14 scroll-mt-24">
         <legend className="sr-only">House</legend>
-        <div className="card grid gap-4 p-6 sm:grid-cols-[1fr_10rem] sm:p-7">
+        <div className={`card grid gap-4 p-6 sm:p-7 ${pro ? 'sm:grid-cols-[1fr_1fr_10rem]' : 'sm:grid-cols-[1fr_10rem]'}`}>
           <label>
             <span className="font-display text-[1.5rem] leading-tight text-ink">Plan Name</span>
             <TextInput name="name" required placeholder="Maple Street" className="mt-3" />
           </label>
+          {pro ? (
+            <label>
+              <span className="font-display text-[1.5rem] leading-tight text-ink">Client</span>
+              <TextInput name="clientName" maxLength={120} placeholder="The Alvarez Family" className="mt-3" />
+            </label>
+          ) : null}
           <label>
             <span className="font-display text-[1.5rem] leading-tight text-ink">Zip</span>
             <TextInput name="zip" required inputMode="numeric" pattern="\d{5}" maxLength={5} placeholder="86301" className="mt-3" />

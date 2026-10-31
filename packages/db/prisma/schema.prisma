@@ -36,6 +36,9 @@ model User {
   name      String?
   kind      UserKind   @default(HOMEOWNER)
   zip       String?
+  /// Pro accounts: printed on every handoff document as the preparer.
+  studio    String?
+  license   String?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   projects  Project[]
@@ -59,6 +62,8 @@ model Project {
   user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   name            String
   zip             String
+  /// Set by pro accounts that run projects for clients.
+  clientName      String?
   status          ProjectStatus @default(INTAKE)
   budgetLowCents  Int?
   budgetHighCents Int?
@@ -70,6 +75,7 @@ model Project {
   recommendations Recommendation[]
   roadmapItems    RoadmapItem[]
   artifacts       Artifact[]
+  shareLinks      ShareLink[]
 
   @@index([userId, updatedAt])
   @@index([zip])
@@ -394,6 +400,21 @@ model Artifact {
   generatedAt DateTime     @default(now())
 
   @@unique([projectId, type, version])
+  @@index([projectId])
+}
+
+/// Read-only handoff link for a contractor or client. No account needed.
+model ShareLink {
+  id           String    @id @default(cuid())
+  token        String    @unique
+  projectId    String
+  project      Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  label        String?
+  views        Int       @default(0)
+  lastViewedAt DateTime?
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+
   @@index([projectId])
 }
 

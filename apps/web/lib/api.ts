@@ -116,7 +116,51 @@ export interface ApiProjectSummary {
   updatedAt: string;
   briefComplete: boolean;
   rooms: number;
+  clientName: string | null;
+  roadmapItems: number;
+  artifacts: number;
 }
+
+export type AccountKind = 'HOMEOWNER' | 'DESIGNER' | 'CONTRACTOR' | 'STAGER' | 'AGENT';
+
+export const KIND_LABEL: Record<AccountKind, string> = {
+  HOMEOWNER: 'Homeowner',
+  DESIGNER: 'Designer',
+  CONTRACTOR: 'Contractor',
+  STAGER: 'Stager',
+  AGENT: 'Agent',
+};
+
+export interface ApiMe {
+  id: string;
+  email: string;
+  name: string | null;
+  kind: AccountKind;
+  zip: string | null;
+  studio: string | null;
+  license: string | null;
+  pro: boolean;
+}
+
+export interface ApiPreparer {
+  name: string | null;
+  studio: string | null;
+  license: string | null;
+  kind: AccountKind;
+}
+
+export interface ApiShare {
+  id: string;
+  token: string;
+  label: string | null;
+  views: number;
+  lastViewedAt: string | null;
+  createdAt: string;
+}
+
+/** One line naming who prepared a document. */
+export const preparedLine = (p: ApiPreparer | null) =>
+  p ? [p.studio ?? p.name, p.license ? `Lic. ${p.license}` : null].filter(Boolean).join(' · ') || null : null;
 
 /** Server-side base. Browser code uses the same-origin /api/v1 rewrite instead. */
 const base = () => `${process.env.API_URL ?? 'http://localhost:4000'}/v1`;

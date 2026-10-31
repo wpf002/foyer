@@ -7,20 +7,27 @@ import { isSample } from '@/lib/api';
 import { project } from '@/lib/mock';
 
 const NAV = [
+  { href: '/projects', label: 'Projects' },
   { href: '/projects/prescott', label: 'Sample' },
+  { href: '/account', label: 'Account' },
   { href: '/intake', label: 'Start A Plan' },
 ];
 
 export function SiteHeader() {
   const path = usePathname();
   const inSample = isSample(path.split('/')[2] ?? '') && path.startsWith('/projects/');
+  const shared = path.startsWith('/share/');
 
   return (
     <header className="no-print sticky top-0 z-30 border-b border-line bg-canvas/90 backdrop-blur-sm">
       <div className="mx-auto flex h-16 max-w-[1240px] items-center gap-5 px-6">
-        <Link href="/" className="text-ink transition-opacity hover:opacity-70">
+        {shared ? (
           <Wordmark />
-        </Link>
+        ) : (
+          <Link href="/" className="text-ink transition-opacity hover:opacity-70">
+            <Wordmark />
+          </Link>
+        )}
         {inSample ? (
           <span className="hidden items-center gap-3 text-sm text-ink-muted sm:flex">
             <span className="h-4 w-px bg-line" />
@@ -28,7 +35,7 @@ export function SiteHeader() {
           </span>
         ) : null}
 
-        <nav className="ml-auto flex items-center gap-1">
+        <nav className={shared ? 'hidden' : 'ml-auto flex items-center gap-1'}>
           {NAV.map((n) => (
             <Link
               key={n.href}

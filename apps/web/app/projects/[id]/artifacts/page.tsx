@@ -1,27 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ARTIFACT_TYPES, buildArtifact, SLUG, TITLES } from '@foyer/artifacts';
-import { cx, Material, type Finish } from '@foyer/ui';
+import { cx, Material } from '@foyer/ui';
 import { GenerateArtifacts } from '@/components/artifact-tools';
-import { api, isSample, type ApiArtifactSummary, type ApiProject } from '@/lib/api';
+import { ShareLinks } from '@/components/share-tools';
+import { api, isSample, type ApiArtifactSummary, type ApiProject, type ApiShare } from '@/lib/api';
+import { COVER, NOTE } from '@/lib/handoff';
 import { sampleInput } from '@/lib/sample-artifacts';
-
-/** A cover finish per document, so the set reads as a set of bound briefs. */
-const COVER: Record<string, Finish> = {
-  'contractor-brief': 'walnut',
-  'designer-brief': 'linen',
-  'shopping-list': 'oak',
-  'permit-checklist': 'plaster',
-  'contractor-questions': 'terracotta',
-};
-
-const NOTE: Record<string, string> = {
-  'contractor-brief': 'Scope, preserves, sequencing, permits.',
-  'designer-brief': 'Mood, priorities, money, pieces retained.',
-  'shopping-list': 'Ranges by room.',
-  'permit-checklist': 'Flags, licensed work, local filing.',
-  'contractor-questions': 'Questions per hired scope item.',
-};
 
 interface Card {
   slug: string;
@@ -36,7 +21,7 @@ const stamp = (d: string) =>
 export default async function ArtifactsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   let cards: Card[];
-  let live: { hasRoadmap: boolean; generated: string | null } | null = null;
+  let live: { hasRoadmap: boolean; generated: string | null; shares: ApiShare[] } | null = null;
 
   if (isSample(id)) {
     const input = sampleInput();
@@ -47,14 +32,15 @@ export default async function ArtifactsPage({ params }: { params: Promise<{ id: 
       version: null,
     }));
   } else {
-    const [p, list] = await Promise.all([
+    const [p, list, shares] = await Promise.all([
       api<ApiProject>(`/projects/${id}`),
       api<ApiArtifactSummary[]>(`/projects/${id}/artifacts`),
+      api<ApiShare[]>(`/projects/${id}/shares`),
     ]);
     if (!p || !list) notFound();
     cards = list.map((a) => ({ slug: a.slug, title: a.title, sections: a.sections, version: a.version }));
     const newest = list.map((a) => a.generatedAt).sort().at(-1) ?? null;
-    live = { hasRoadmap: p.roadmapItems.length > 0, generated: newest };
+    live = { hasRoadmap: p.roadmapItems.length > 0, generated: newest, shares: shares ?? [] };
   }
 
   return (
@@ -68,6 +54,7 @@ export default async function ArtifactsPage({ params }: { params: Promise<{ id: 
           <div className="flex items-center gap-4">
             {live.generated ? <span className="text-sm text-ink-faint">Written {stamp(live.generated)}</span> : null}
             <GenerateArtifacts projectId={id} again={!!live.generated} />
+            {live.generated ? <ShareLinks projectId={id} shares={live.shares} /> : null}
           </div>
         ) : null}
       </header>

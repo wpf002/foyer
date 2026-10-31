@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import { ModelError, SpendCapExceeded } from '@foyer/ai';
 import { health } from './routes/health';
 import { costRoutes } from './routes/cost';
+import { accountRoutes } from './routes/accounts';
 import { artifactRoutes } from './routes/artifacts';
 import { projectRoutes } from './routes/projects';
 
@@ -26,6 +27,7 @@ await app.register(health);
 await app.register(costRoutes, { prefix: '/v1/cost' });
 await app.register(projectRoutes, { prefix: '/v1' });
 await app.register(artifactRoutes, { prefix: '/v1' });
+await app.register(accountRoutes, { prefix: '/v1' });
 
 const port = Number(process.env.API_PORT ?? 4000);
 const host = process.env.API_HOST ?? '0.0.0.0';

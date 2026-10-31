@@ -34,7 +34,7 @@ const uploadDir = () => path.resolve(process.env.FOYER_UPLOAD_DIR ?? path.join(p
 /** Phase 1 has one local user and no auth. */
 const DEV_EMAIL = 'dev@foyer.local';
 let devUserId: string | undefined;
-async function userId(): Promise<string> {
+export async function userId(): Promise<string> {
   devUserId ??= (
     await prisma.user.upsert({ where: { email: DEV_EMAIL }, update: {}, create: { email: DEV_EMAIL, name: 'Dev' } })
   ).id;
@@ -132,25 +132,29 @@ export async function projectRoutes(app: FastifyInstance) {
     const rows = await prisma.project.findMany({
       where: { userId: await userId() },
       orderBy: { updatedAt: 'desc' },
-      include: { brief: { select: { completedAt: true } }, _count: { select: { rooms: true } } },
+      include: { brief: { select: { completedAt: true } }, _count: { select: { rooms: true, roadmapItems: true, artifacts: true } } },
     });
     return rows.map((p) => ({
       id: p.id,
       name: p.name,
       zip: p.zip,
+      clientName: p.clientName,
       status: p.status,
       updatedAt: p.updatedAt,
       briefComplete: !!p.brief?.completedAt,
       rooms: p._count.rooms,
+      roadmapItems: p._count.roadmapItems,
+      artifacts: p._count.artifacts,
     }));
   });
 
-  app.post<{ Body: { name?: string; zip?: string } }>('/projects', async (req, reply) => {
+  app.post<{ Body: { name?: string; zip?: string; clientName?: string } }>('/projects', async (req, reply) => {
     const name = req.body?.name?.trim();
     const zip = req.body?.zip?.trim();
+    const clientName = typeof req.body?.clientName === 'string' ? req.body.clientName.trim().slice(0, 120) || null : null;
     if (!name) return bad(reply, 'name is required');
     if (!zip || !/^\d{5}$/.test(zip)) return bad(reply, 'zip must be 5 digits');
-    const p = await prisma.project.create({ data: { name, zip, userId: await userId(), brief: { create: {} } } });
+    const p = await prisma.project.create({ data: { name, zip, clientName, userId: await userId(), brief: { create: {} } } });
     return reply.code(201).send({ id: p.id });
   });
 

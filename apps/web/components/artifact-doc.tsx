@@ -1,5 +1,6 @@
 import { cx } from '@foyer/ui';
 import type { ArtifactDoc, Block } from '@foyer/artifacts';
+import { KIND_LABEL, type ApiPreparer } from '@/lib/api';
 
 const issued = (iso: string) =>
   new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
@@ -106,8 +107,25 @@ function BlockView({ b }: { b: Block }) {
 }
 
 /** A handoff document. The same markup prints to PDF. */
-export function ArtifactDocView({ doc, version, strip }: { doc: ArtifactDoc; version?: number; strip?: React.ReactNode }) {
+export function ArtifactDocView({
+  doc,
+  version,
+  strip,
+  preparedBy,
+}: {
+  doc: ArtifactDoc;
+  version?: number;
+  strip?: React.ReactNode;
+  preparedBy?: ApiPreparer | null;
+}) {
+  const studio = preparedBy?.studio ?? null;
+  const preparer = preparedBy
+    ? [preparedBy.name ?? KIND_LABEL[preparedBy.kind], preparedBy.license ? `Lic. ${preparedBy.license}` : null]
+        .filter(Boolean)
+        .join(' · ')
+    : null;
   const meta: [string, string][] = [
+    ...(preparer ? ([['Prepared By', preparer]] as [string, string][]) : []),
     ['Project', doc.projectName],
     ['Location', doc.location],
     ['Issued', issued(doc.issuedAt)],
@@ -118,7 +136,7 @@ export function ArtifactDocView({ doc, version, strip }: { doc: ArtifactDoc; ver
       {strip}
       <div className="px-9 py-12 sm:px-14 sm:py-16 print:p-0">
         <header className="border-b border-line-strong pb-6">
-          <p className="text-sm text-ink-faint">Foyer &middot; {doc.projectName}</p>
+          <p className="text-sm text-ink-faint">{studio ?? 'Foyer'} &middot; {doc.projectName}</p>
           <h1 className="mt-2 text-[3rem] leading-none">{doc.title}</h1>
           <dl className="mt-7 grid gap-x-8 gap-y-1.5 text-sm text-ink-muted sm:grid-cols-2 print:grid-cols-2">
             {meta.map(([k, v]) => (
