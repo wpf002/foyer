@@ -358,3 +358,8 @@ export function enforceTrades(c: Critique): Critique {
   }
   return out;
 }
+
+/** Safety rewrite for one free-text field outside a critique (roadmap why, risk notes, edge reasons). */
+export function safeText(s: string): string {
+  return addTrades(rewriteSentences(s));
+}

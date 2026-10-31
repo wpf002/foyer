@@ -1,4 +1,4 @@
-import type { Category, Effort, Section } from './mock';
+import type { Category, Effort, Path, Permit, Phase, Section } from './mock';
 
 /** Sample project id. Everything else is read from the API. */
 export const SAMPLE_ID = 'prescott';
@@ -56,6 +56,22 @@ export interface ApiRoom {
   recommendations: ApiRecommendation[];
 }
 
+export interface ApiRoadmapItem {
+  id: string;
+  recommendationId: string | null;
+  phase: Phase;
+  order: number;
+  scope: string;
+  why: string;
+  path: Path;
+  permit: Permit;
+  effort: Effort;
+  lowCents: number | null;
+  highCents: number | null;
+  riskNote: string | null;
+  dependsOn: { prerequisiteId: string; reason: string }[];
+}
+
 export interface ApiProject {
   id: string;
   name: string;
@@ -66,6 +82,7 @@ export interface ApiProject {
   updatedAt: string;
   brief: { completedAt: string | null; answers: ApiAnswer[] } | null;
   rooms: ApiRoom[];
+  roadmapItems: ApiRoadmapItem[];
 }
 
 export interface ApiProjectSummary {

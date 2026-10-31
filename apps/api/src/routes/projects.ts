@@ -8,6 +8,7 @@ import { prisma, Prisma, type RoomType } from '@foyer/db';
 import type { ImageMime } from '@foyer/ai';
 import {
   analyzePhotos,
+  buildRoadmap,
   critiqueRoom,
   mergeRead,
   parseIntake,
@@ -78,6 +79,10 @@ const projectInclude = {
       photos: { orderBy: { createdAt: 'asc' } },
       recommendations: { orderBy: { priority: 'asc' }, include: { briefAnswer: { select: { questionId: true } } } },
     },
+  },
+  roadmapItems: {
+    orderBy: [{ phase: 'asc' }, { order: 'asc' }],
+    include: { dependsOn: { select: { prerequisiteId: true, reason: true } } },
   },
 } satisfies Prisma.ProjectInclude;
 
@@ -332,6 +337,8 @@ export async function projectRoutes(app: FastifyInstance) {
     const dropped = critique.recommendations.length - kept.length;
 
     await prisma.$transaction([
+      // The roadmap sequenced the old recommendations. Rebuild it after a new critique.
+      prisma.roadmapItem.deleteMany({ where: { projectId: r.projectId } }),
       prisma.recommendation.deleteMany({ where: { roomId: r.id } }),
       ...kept.map(({ rec, i, briefAnswerId }) =>
         prisma.recommendation.create({
@@ -363,5 +370,56 @@ export async function projectRoutes(app: FastifyInstance) {
       prisma.project.update({ where: { id: r.projectId }, data: { status: 'IN_PROGRESS' } }),
     ]);
     return { kept: kept.length, dropped, model, costUsd: usage.costUsd };
+  });
+
+  /** Sequences every recommendation on the project. Replaces the previous roadmap. */
+  app.post<{ Params: { id: string } }>('/projects/:id/roadmap', async (req, reply) => {
+    const p = await ownedProject(req.params.id);
+    if (!p) return bad(reply, 'not_found', 404);
+    const recs = p.rooms.flatMap((room) =>
+      room.recommendations.map((r) => ({
+        id: r.id,
+        room: room.name,
+        category: r.category,
+        title: r.title,
+        rationale: r.rationale,
+        effort: r.effort,
+        needsProReview: r.needsProReview,
+        priority: r.priority,
+      })),
+    );
+    if (!recs.length) return bad(reply, 'Critique a room first', 409);
+    const { roadmap, model, usage } = await buildRoadmap(recs, await userId());
+    if (roadmap.notes.length) req.log.info({ projectId: p.id, notes: roadmap.notes }, 'roadmap adjusted');
+
+    await prisma.$transaction(async (tx) => {
+      await tx.roadmapItem.deleteMany({ where: { projectId: p.id } });
+      const itemOf = new Map<string, string>();
+      for (const it of roadmap.items) {
+        const row = await tx.roadmapItem.create({
+          data: {
+            projectId: p.id,
+            recommendationId: it.recId,
+            phase: it.phase,
+            order: it.order,
+            scope: it.scope,
+            why: it.why,
+            path: it.path,
+            permit: it.permit,
+            effort: it.effort,
+            riskNote: it.riskNote,
+          },
+        });
+        itemOf.set(it.recId, row.id);
+      }
+      await tx.roadmapDependency.createMany({
+        data: roadmap.edges.map((e) => ({
+          dependentId: itemOf.get(e.dependent)!,
+          prerequisiteId: itemOf.get(e.prerequisite)!,
+          reason: e.reason,
+        })),
+      });
+    });
+    return { items: roadmap.items.length, edges: roadmap.edges.length, adjusted: roadmap.notes.length, model, costUsd: usage.costUsd };
   });
 }

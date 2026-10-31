@@ -8,7 +8,7 @@ import { send } from '@/lib/api';
 const TYPES = ['Kitchen', 'Bathroom', 'Living', 'Dining', 'Bedroom', 'Entry', 'Office', 'Basement', 'Outdoor', 'Other'];
 
 /** Runs one API call, then re-renders the server page. Shows the API's error inline. */
-function useAction() {
+export function useAction() {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [busy, setBusy] = useState<string | null>(null);

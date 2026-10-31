@@ -92,8 +92,8 @@ Spend caps are enforced before every call in `packages/ai/src/spend.ts`, per use
 | Phase | Scope | State |
 | --- | --- | --- |
 | 0 | Monorepo, data model, AI gateway, eval harness, design system, screens | Done |
-| 1 | Intake persistence, photo analysis, the critique chain | Next |
-| 2 | Roadmap sequencing and dependency reasoning |  |
+| 1 | Intake persistence, photo analysis, the critique chain | Done |
+| 2 | Roadmap sequencing and dependency reasoning | Built |
 | 3 | Cost engine on real zip data, flywheel writes |  |
 | 4 | Handoff artifacts and PDF export |  |
 | 5 | Pro accounts |  |
