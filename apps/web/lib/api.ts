@@ -116,6 +116,7 @@ export interface ApiProject {
   brief: { completedAt: string | null; answers: ApiAnswer[] } | null;
   rooms: ApiRoom[];
   roadmapItems: ApiRoadmapItem[];
+  chatCount: number;
 }
 
 export interface ApiArtifactSummary {
@@ -239,4 +240,17 @@ export interface ApiCostIndex {
   regions: number;
   workTypes: number;
   suppressed: number;
+}
+
+export type ApiChatChange =
+  | { op: 'add'; roomId: string; title: string }
+  | { op: 'remove'; recId: string }
+  | { op: 'update'; recId: string; title?: string };
+
+export interface ApiChatMessage {
+  id: string;
+  role: 'USER' | 'ASSISTANT';
+  content: string;
+  changes: ApiChatChange[] | null;
+  createdAt: string;
 }

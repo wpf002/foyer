@@ -6,3 +6,4 @@ export * from './checks';
 export * from './judge';
 export * from './vision';
 export * from './roadmap';
+export * from './chat';

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { budgetLabel } from '../../packages/ui/src/money';
+import { budgetLabel } from '../../packages/ui/src/format';
 
 test('budgetLabel reads an upper-only band as Under', () => assert.equal(budgetLabel(null, 1_000_000), 'Under $10k'));
 test('budgetLabel reads a lower-only band as open-ended', () => assert.equal(budgetLabel(5_000_000, null), '$50k+'));

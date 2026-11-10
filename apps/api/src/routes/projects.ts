@@ -37,7 +37,7 @@ export async function userId(): Promise<string> {
   return devUserId;
 }
 
-const bad = (reply: FastifyReply, error: string, status = 400) => reply.code(status).send({ error });
+export const bad = (reply: FastifyReply, error: string, status = 400) => reply.code(status).send({ error });
 export const strList = (v: unknown): string[] =>
   Array.isArray(v) ? v.filter((s): s is string => typeof s === 'string' && !!s.trim()).map((s) => s.trim()) : [];
 const inches = (v: unknown): number | null | undefined => {
@@ -47,7 +47,7 @@ const inches = (v: unknown): number | null | undefined => {
   return Number.isFinite(n) && n > 0 && n < 2400 ? n : undefined;
 };
 
-function toRoomInput(r: {
+export function toRoomInput(r: {
   name: string;
   type: RoomType;
   widthIn: number | null;
@@ -102,6 +102,7 @@ const projectInclude = {
       },
     },
   },
+  _count: { select: { chatMessages: true } },
 } satisfies Prisma.ProjectInclude;
 
 function conceptOf(r: { id: string; createdAt: Date } | undefined) {
@@ -119,9 +120,10 @@ async function ownedRoom(id: string) {
   });
 }
 
-function serializeProject(p: NonNullable<Awaited<ReturnType<typeof ownedProject>>>) {
+function serializeProject({ _count, ...p }: NonNullable<Awaited<ReturnType<typeof ownedProject>>>) {
   return {
     ...p,
+    chatCount: _count.chatMessages,
     region: regionFactor(p.zip),
     roadmapItems: p.roadmapItems.map(({ recommendation, ...it }) => ({ ...it, cost: recommendation?.costEstimate ?? null })),
     rooms: p.rooms.map((r) => ({

@@ -13,7 +13,8 @@ export type Task =
   | 'build_roadmap'
   | 'sequence_check'
   | 'analyze_photo'
-  | 'judge_output';
+  | 'judge_output'
+  | 'design_chat';
 
 const TASK_TIER: Record<Task, Tier> = {
   parse_intake_answer: 'cheap',
@@ -24,6 +25,7 @@ const TASK_TIER: Record<Task, Tier> = {
   sequence_check: 'reasoning',
   analyze_photo: 'vision',
   judge_output: 'judge',
+  design_chat: 'reasoning',
 };
 
 const ENV_KEY: Record<Tier, string> = {

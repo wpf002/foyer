@@ -46,6 +46,7 @@ async function railFor(id: string): Promise<Omit<RailProps, 'base'> | null> {
       { seg: 'roadmap', title: 'Roadmap', count: p.roadmapItems.length },
       { seg: 'costs', title: 'Costs', count: p.roadmapItems.filter((r) => r.lowCents !== null).length },
       { seg: 'artifacts', title: 'Handoff', count: p.roadmapItems.length ? 5 : 0 },
+      { seg: 'chat', title: 'Chat', count: p.chatCount },
     ],
   };
 }

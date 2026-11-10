@@ -76,6 +76,7 @@ model Project {
   roadmapItems    RoadmapItem[]
   artifacts       Artifact[]
   shareLinks      ShareLink[]
+  chatMessages    ChatMessage[]
 
   @@index([userId, updatedAt])
   @@index([zip])
@@ -470,4 +471,27 @@ model EvalScore {
   reason    String?
 
   @@index([runId, caseId])
+}
+
+// ---------------------------------------------------------------------------
+// Chat
+// ---------------------------------------------------------------------------
+
+enum ChatRole {
+  USER
+  ASSISTANT
+}
+
+/// One turn in a project's design chat. `changes` holds the recommendation
+/// edits the assistant applied on that turn.
+model ChatMessage {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  role      ChatRole
+  content   String
+  changes   Json?
+  createdAt DateTime @default(now())
+
+  @@index([projectId, createdAt])
 }
