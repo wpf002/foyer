@@ -15,3 +15,6 @@ packages/db/generated/
 .claude/
 
 .uploads/
+
+# Real homeowner rooms stay local; this repo is public.
+eval/golden/*-real-*/
