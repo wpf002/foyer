@@ -19,6 +19,7 @@
     "@foyer/rubric": "workspace:*"
   },
   "devDependencies": {
+    "sharp": "0.33.5",
     "tsx": "4.19.2"
   }
 }

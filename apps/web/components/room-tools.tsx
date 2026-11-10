@@ -97,7 +97,7 @@ export function RoomTools({
         <input
           ref={file}
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
           multiple
           hidden
           onChange={(e) => {

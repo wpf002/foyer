@@ -87,17 +87,17 @@ export const SECTIONS: { key: Section; label: string; n: string }[] = [
 export const brief: BriefAnswer[] = [
   { id: 'a01', questionId: 'Q01', section: 'SPACE', short: 'Scope', prompt: 'Which rooms are in scope?', raw: 'Kitchen, living room, entry. The primary bath if the money stretches.', parsed: ['Kitchen', 'Living', 'Entry', 'Bath (stretch)'] },
   { id: 'a02', questionId: 'Q02', section: 'SPACE', short: 'Horizon', prompt: 'How long do you expect to stay?', raw: "Ten years at least. Kids are 4 and 7, we're not moving before high school.", parsed: ['10+ years'] },
-  { id: 'a03', questionId: 'Q03', section: 'SPACE', short: 'Complaint', prompt: 'What does the house get wrong today?', raw: 'It feels low and dim. Eight-foot ceilings and one light in the middle of every room.', parsed: ['Ceiling reads low', 'Single light source'] },
+  { id: 'a03', questionId: 'Q03', section: 'SPACE', short: 'Complaint', prompt: 'What bugs you about these rooms?', raw: 'It feels low and dim. Eight-foot ceilings and one light in the middle of every room.', parsed: ['Ceiling reads low', 'Single light source'] },
   { id: 'a04', questionId: 'Q04', section: 'SPACE', short: 'Measurements', prompt: 'Do you have dimensions or drawings?', raw: 'I measured by hand. Kitchen is about 8′4″ by 13′6″.', parsed: ['Hand-measured', 'No drawings'] },
   { id: 'a05', questionId: 'Q05', section: 'LIFE', short: 'Household', prompt: 'Who lives here, and who visits?', raw: 'Two adults, two kids, a 60-lb dog. My parents stay a week at a time twice a year.', parsed: ['4 residents', 'Large dog', 'Recurring guests'] },
   { id: 'a06', questionId: 'Q06', section: 'LIFE', short: 'Weekday', prompt: 'Walk me through a weekday evening.', raw: 'Both of us cook at once and we collide. Homework happens at the dining table while dinner is going.', parsed: ['Two cooks', 'Overlapping zones'] },
   { id: 'a07', questionId: 'Q07', section: 'LIFE', short: 'Mood', prompt: 'What mood should the space hold?', raw: 'Calm. Warm at night. I want it to feel like the light is coming from lamps, not the ceiling.', parsed: ['Calm', 'Warm', 'Low ambient at night'] },
-  { id: 'a08', questionId: 'Q08', section: 'LIFE', short: 'Friction', prompt: 'What do you do here that the room fights?', raw: 'Carrying food from the kitchen to the table. The doorway is 32 inches and you turn sideways.', parsed: ['Blocked circulation', 'Narrow opening'] },
-  { id: 'a09', questionId: 'Q09', section: 'AESTHETIC', short: 'References', prompt: "Three rooms you've saved. What do they share?", raw: 'All three had plaster walls, visible wood, and almost no hardware showing.', parsed: ['Plaster', 'Warm wood', 'Minimal hardware'] },
+  { id: 'a08', questionId: 'Q08', section: 'LIFE', short: 'Friction', prompt: "What's hard to do in these rooms now?", raw: 'Carrying food from the kitchen to the table. The doorway is 32 inches and you turn sideways.', parsed: ['Blocked circulation', 'Narrow opening'] },
+  { id: 'a09', questionId: 'Q09', section: 'AESTHETIC', short: 'References', prompt: 'Any rooms you like? Describe them or skip.', raw: 'All three had plaster walls, visible wood, and almost no hardware showing.', parsed: ['Plaster', 'Warm wood', 'Minimal hardware'] },
   { id: 'a10', questionId: 'Q10', section: 'AESTHETIC', short: 'Keep', prompt: 'What stays exactly as it is?', raw: 'The oak floors. They are original and I will not cover them.', parsed: ['Original oak floors'] },
   { id: 'a11', questionId: 'Q11', section: 'AESTHETIC', short: 'Veto', prompt: "Colors or materials you can't live with?", raw: 'Cool grey. Greige. Anything that reads blue in daylight. No subway tile.', parsed: ['No cool grey', 'No subway tile'] },
-  { id: 'a12', questionId: 'Q12', section: 'AESTHETIC', short: 'Quiet', prompt: 'How much visual quiet do you need?', raw: 'A lot. Closed storage wherever possible. Open shelves become a mess within a week.', parsed: ['High quiet', 'Closed storage'] },
-  { id: 'a13', questionId: 'Q13', section: 'CONSTRAINTS', short: 'Budget', prompt: 'Budget band, and what is flexible?', raw: '18 to 34 thousand. I would rather do the kitchen properly than touch four rooms lightly.', parsed: ['$18k–$34k', 'Depth over breadth'] },
+  { id: 'a12', questionId: 'Q12', section: 'AESTHETIC', short: 'Quiet', prompt: 'How much stuff out on shelves is OK?', raw: 'A lot. Closed storage wherever possible. Open shelves become a mess within a week.', parsed: ['High quiet', 'Closed storage'] },
+  { id: 'a13', questionId: 'Q13', section: 'CONSTRAINTS', short: 'Budget', prompt: 'What can you spend?', raw: '$25k To $50k', parsed: ['$25k-$50k'] },
   { id: 'a14', questionId: 'Q14', section: 'CONSTRAINTS', short: 'Timeline', prompt: 'Timeline and hard dates?', raw: 'Start in spring. Kitchen has to work by the end of August, school starts.', parsed: ['Spring start', 'Hard date: late Aug'] },
   { id: 'a15', questionId: 'Q15', section: 'CONSTRAINTS', short: 'Tenure', prompt: 'Own or rent? HOA or landmark district?', raw: 'We own it. No HOA. It is not in a historic district as far as I know.', parsed: ['Owner', 'No HOA', 'No district (unconfirmed)'] },
 ];
@@ -163,7 +163,7 @@ export const recommendations: Recommendation[] = [
   {
     id: 'c5', roomId: 'r2', briefAnswerId: 'a11', category: 'COSMETIC',
     title: 'Limewash In A Warm Bone, Not White',
-    rationale: 'You vetoed anything that reads blue in daylight, and your three saved rooms all had plaster. Limewash in a warm bone gives you the depth of those references and shifts warm as the light drops, which is the behavior you asked for at night. Flat white in a south-facing room at this latitude goes cold by 4pm.',
+    rationale: 'You vetoed anything that reads blue in daylight, and the three rooms you liked all had plaster. Limewash in a warm bone gives you the depth of those references and shifts warm as the light drops, which is the behavior you asked for at night. Flat white in a south-facing room at this latitude goes cold by 4pm.',
     effort: 'WEEK',
   },
   {

@@ -5,7 +5,7 @@ import path from 'node:path';
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import multipart from '@fastify/multipart';
 import { prisma, Prisma, type RoomType } from '@foyer/db';
-import type { ImageMime } from '@foyer/ai';
+import { isStoredMime, photoKind, storablePhoto, type ImageMime } from '@foyer/ai';
 import {
   analyzePhotos,
   buildRoadmap,
@@ -23,11 +23,6 @@ import { readScan, regionFactor } from '@foyer/cost';
 import { priceProject } from '../pricing';
 
 const ROOM_TYPES: RoomType[] = ['KITCHEN', 'BATHROOM', 'LIVING', 'DINING', 'BEDROOM', 'ENTRY', 'OFFICE', 'BASEMENT', 'OUTDOOR', 'OTHER'];
-const MIMES: Record<string, { ext: string; mime: ImageMime }> = {
-  'image/jpeg': { ext: 'jpg', mime: 'image/jpeg' },
-  'image/png': { ext: 'png', mime: 'image/png' },
-  'image/webp': { ext: 'webp', mime: 'image/webp' },
-};
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 
 export const uploadDir = () => path.resolve(process.env.FOYER_UPLOAD_DIR ?? path.join(process.cwd(), '../../.uploads'));
@@ -325,14 +320,21 @@ export async function projectRoutes(app: FastifyInstance) {
     await mkdir(dir, { recursive: true });
     const ids: string[] = [];
     for await (const part of req.files()) {
-      const kind = MIMES[part.mimetype];
-      if (!kind) return bad(reply, `${part.filename}: JPEG, PNG, or WebP only`, 415);
-      const buf = await part.toBuffer();
+      const kind = photoKind(part.mimetype, part.filename);
+      if (!kind) return bad(reply, `${part.filename}: JPEG, PNG, WebP, or HEIC only`, 415);
+      const raw = await part.toBuffer();
       if (part.file.truncated) return bad(reply, `${part.filename}: over 10 MB`, 413);
-      const key = `${randomUUID()}.${kind.ext}`;
-      await writeFile(path.join(dir, key), buf);
+      let photo;
+      try {
+        photo = await storablePhoto(raw, kind);
+      } catch (err) {
+        req.log.warn({ err, file: part.filename }, 'heic conversion failed');
+        return bad(reply, `${part.filename}: couldn't read this HEIC file`, 422);
+      }
+      const key = `${randomUUID()}.${photo.ext}`;
+      await writeFile(path.join(dir, key), photo.buf);
       const ph = await prisma.photo.create({
-        data: { roomId: r.id, storageKey: key, mime: kind.mime, url: '' },
+        data: { roomId: r.id, storageKey: key, mime: photo.mime, url: '' },
       });
       ids.push(ph.id);
     }
@@ -351,7 +353,7 @@ export async function projectRoutes(app: FastifyInstance) {
   app.post<{ Params: { id: string } }>('/rooms/:id/analyze', async (req, reply) => {
     const r = await ownedRoom(req.params.id);
     if (!r) return bad(reply, 'not_found', 404);
-    const stored = r.photos.filter((p) => p.storageKey && p.mime && MIMES[p.mime]);
+    const stored = r.photos.filter((p) => p.storageKey && p.mime && isStoredMime(p.mime));
     if (!stored.length) return bad(reply, 'Upload a photo first');
     const photos = await Promise.all(
       stored.map(async (p) => ({

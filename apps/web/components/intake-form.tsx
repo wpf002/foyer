@@ -8,15 +8,6 @@ import { SECTIONS, SHORT } from '@/lib/mock';
 
 const MIN_ANSWERS = 8;
 
-/** Budget fields come back as "$18,000 to $34,000. Flexible: ..." so the parser sees one answer. */
-function budgetRaw(f: FormData): string {
-  const low = String(f.get('Q13_low') ?? '').trim();
-  const high = String(f.get('Q13_high') ?? '').trim();
-  const flex = String(f.get('Q13_flex') ?? '').trim();
-  const band = low && high ? `${low} to ${high}` : low || high;
-  return [band, flex ? `Flexible: ${flex}` : ''].filter(Boolean).join('. ');
-}
-
 export function IntakeForm({ questions, pro = false }: { questions: ApiQuestion[]; pro?: boolean }) {
   const router = useRouter();
   const [projectId, setProjectId] = useState<string | null>(null);
@@ -26,7 +17,7 @@ export function IntakeForm({ questions, pro = false }: { questions: ApiQuestion[
   const submit = async (f: FormData) => {
     const answers = questions.map((q) => ({
       questionId: q.id,
-      raw: q.id === 'Q13' ? budgetRaw(f) : String(f.get(q.id) ?? '').trim(),
+      raw: String(f.get(q.id) ?? '').trim(),
     }));
     const filled = answers.filter((a) => a.raw).length;
     if (filled < MIN_ANSWERS) {
@@ -110,15 +101,6 @@ export function IntakeForm({ questions, pro = false }: { questions: ApiQuestion[
                         {q.choices.map((opt) => (
                           <Choice key={opt} name={q.id} value={opt} label={opt} />
                         ))}
-                      </div>
-                    ) : q.id === 'Q13' ? (
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-3">
-                          <TextInput id={q.id} name="Q13_low" inputMode="numeric" placeholder="$18,000" className="max-w-[10rem]" />
-                          <span className="text-sm text-ink-faint">to</span>
-                          <TextInput name="Q13_high" inputMode="numeric" placeholder="$34,000" className="max-w-[10rem]" />
-                        </div>
-                        <TextInput name="Q13_flex" placeholder="What's flexible" />
                       </div>
                     ) : (
                       <TextArea id={q.id} name={q.id} placeholder={SHORT[q.id]} />

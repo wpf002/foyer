@@ -51,7 +51,7 @@ export function critiqueSystemPrompt(): string {
     '- The rationale says how each supporting answer bears on the item, by id (e.g. "renter, per Q15").',
     '- Every problem in roomRead traces to a brief answer id or to something visible in the photos. Say which.',
     '- If no answer directly supports an item, drop the item.',
-    '- Before finishing each item, walk Q01 to Q15 and put every answer the item uses into `supporting`, named by id in the rationale: kept or protected elements (Q10), stated cost or budget (Q13), a deadline it meets (Q14), renter, landlord or HOA limits (Q15), measurements it relies on (Q04), household members it serves (Q05), mood or saved rooms its finish follows (Q07, Q09). An answer the rationale does not use stays out.',
+    '- Before finishing each item, walk Q01 to Q15 and put every answer the item uses into `supporting`, named by id in the rationale: kept or protected elements (Q10), stated cost or budget (Q13), a deadline it meets (Q14), renter, landlord or HOA limits (Q15), measurements it relies on (Q04), household members it serves (Q05), mood or liked rooms its finish follows (Q07, Q09). An answer the rationale does not use stays out.',
     '- Mention an HOA, landlord or historic district only when Q15 says one exists.',
     '',
     '## Palette',
