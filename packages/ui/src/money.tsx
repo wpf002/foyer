@@ -11,6 +11,14 @@ export function money(cents: number): string {
   return `$${Math.round(d).toLocaleString('en-US')}`;
 }
 
+/** A budget band. Open-ended bands read as "Under $10k" or "$50k+" rather than a fake range. */
+export function budgetLabel(lowCents: number | null, highCents: number | null): string | undefined {
+  if (lowCents && highCents) return `${money(lowCents)}–${money(highCents)}`;
+  if (highCents) return `Under ${money(highCents)}`;
+  if (lowCents) return `${money(lowCents)}+`;
+  return undefined;
+}
+
 export function MoneyRange({
   lowCents,
   highCents,

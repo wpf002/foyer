@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Chip, money, MoneyRange, RangeBar } from '@foyer/ui';
+import { budgetLabel, Chip, money, MoneyRange, RangeBar } from '@foyer/ui';
 import { QuoteEntry, Reprice } from '@/components/cost-tools';
 import { api, isSample, type ApiProject } from '@/lib/api';
 import { PHASES, project as sample, roadmap, type Phase } from '@/lib/mock';
@@ -38,9 +38,7 @@ const liveView = (p: ApiProject): View => ({
   live: p.id,
   zip: p.zip,
   budget:
-    p.budgetLowCents !== null && p.budgetHighCents !== null
-      ? { low: p.budgetLowCents, high: p.budgetHighCents }
-      : null,
+    p.budgetHighCents !== null ? { low: p.budgetLowCents ?? 0, high: p.budgetHighCents } : null,
   region: p.region,
   rows: p.roadmapItems.map((r) => ({
     id: r.id,
@@ -138,7 +136,7 @@ export default async function CostsPage({ params }: { params: Promise<{ id: stri
           <div>
             <dt className="text-sm text-ink-inverse-muted">Budget</dt>
             <dd className="mt-1 font-display text-3xl">
-              {v.budget ? <MoneyRange lowCents={v.budget.low} highCents={v.budget.high} /> : '—'}
+              {(v.budget && budgetLabel(v.budget.low, v.budget.high)) ?? '—'}
             </dd>
           </div>
           <div>

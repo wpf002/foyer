@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import type { Finish } from '@foyer/ui';
+import { budgetLabel, type Finish } from '@foyer/ui';
 import { ProjectRail, type RailProps } from '@/components/project-rail';
 import { api, isSample, type ApiProject } from '@/lib/api';
 import { artifacts, brief, palette, project, recommendations, roadmap, rooms, totals } from '@/lib/mock';
@@ -14,8 +14,7 @@ async function railFor(id: string): Promise<Omit<RailProps, 'base'> | null> {
       meta: `${project.city} · ×${project.regionFactor.toFixed(2)}`,
       finishes: palette.map((p) => p.finish),
       budget: {
-        lowCents: project.budgetLowCents,
-        highCents: project.budgetHighCents,
+        label: budgetLabel(project.budgetLowCents, project.budgetHighCents) ?? '',
         overCents: totals.midCents - project.budgetHighCents,
       },
       nav: [
@@ -30,13 +29,12 @@ async function railFor(id: string): Promise<Omit<RailProps, 'base'> | null> {
   }
   const p = await api<ApiProject>(`/projects/${id}`);
   if (!p) return null;
-  const low = p.budgetLowCents ?? p.budgetHighCents;
-  const high = p.budgetHighCents ?? p.budgetLowCents;
+  const label = budgetLabel(p.budgetLowCents, p.budgetHighCents);
   return {
     name: p.name,
     meta: `Zip ${p.zip}`,
     finishes: DEFAULT_FINISHES,
-    budget: low && high ? { lowCents: low, highCents: high } : undefined,
+    budget: label ? { label } : undefined,
     nav: [
       { seg: '', title: 'Brief', count: p.brief?.answers.length ?? 0 },
       { seg: 'rooms', title: 'Rooms', count: p.rooms.length },

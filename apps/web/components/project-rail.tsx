@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cx, Material, MoneyRange, type Finish } from '@foyer/ui';
+import { cx, Material, type Finish } from '@foyer/ui';
 
 export interface RailProps {
   base: string;
@@ -10,7 +10,7 @@ export interface RailProps {
   subtitle?: string;
   meta: string;
   finishes: Finish[];
-  budget?: { lowCents: number; highCents: number; overCents?: number };
+  budget?: { label: string; overCents?: number };
   nav: { seg: string; title: string; count: number }[];
 }
 
@@ -34,11 +34,9 @@ export function ProjectRail({ base, name, subtitle, meta, finishes, budget, nav 
           {budget ? (
             <div className="mt-5 rounded-sm bg-brass-soft/70 px-3.5 py-3">
               <p className="text-xs font-medium text-brass">Budget</p>
-              <MoneyRange
-                lowCents={budget.lowCents}
-                highCents={budget.highCents}
-                className="mt-0.5 block font-display text-xl text-ink"
-              />
+              <span className="mt-0.5 block whitespace-nowrap font-display text-xl tabular-nums text-ink">
+                {budget.label}
+              </span>
               {budget.overCents !== undefined ? (
                 <p className={cx('mt-1 text-xs', budget.overCents > 0 ? 'text-clay-ink' : 'text-olive')}>
                   {budget.overCents > 0
