@@ -3,7 +3,7 @@
  * is versioned content, not prose inside a prompt string literal. Changing it
  * changes the eval baseline. Bump VERSION and rerun the golden set.
  */
-export const RUBRIC_VERSION = '0.3.1';
+export const RUBRIC_VERSION = '0.3.2';
 
 export const CATEGORIES = ['STRUCTURAL', 'COSMETIC', 'FUNCTIONAL', 'ATMOSPHERIC'] as const;
 export type Category = (typeof CATEGORIES)[number];
@@ -22,7 +22,7 @@ export const EFFORT = ['WEEKEND', 'WEEK', 'MULTI_WEEK'] as const;
 export type Effort = (typeof EFFORT)[number];
 
 export const EFFORT_DEFINITIONS: Record<Effort, string> = {
-  WEEKEND: 'One or two days, homeowner or handyman, no trades sequencing.',
+  WEEKEND: 'Minutes up to two days, homeowner or handyman, no trades sequencing.',
   WEEK: 'Up to five working days, may need one trade.',
   MULTI_WEEK: 'Multiple trades in sequence, lead times, or a permit.',
 };
@@ -93,9 +93,9 @@ export const SAFETY_RULES = [
   'Demolition, sanding, or opening walls in a house built before 1978 says to test for lead paint first, and before 1985 for asbestos.',
   'A dimension that rests on an unverified measurement is stated as conditional on field-measuring it. Say which measurement looks wrong.',
   'Do not give a target dimension for an opening before the engineer confirms the opening is possible.',
-  'Anything that carries load from a wall or ceiling sets needsProReview: grab bars, shower seats, wall-hung vanities or shelves, TV mounts, ceiling hooks, canopies, heavy mirrors. proReviewReason names who confirms blocking or anchors.',
+  'Anything that carries load from a wall or ceiling sets needsProReview: grab bars, shower seats, wall-hung vanities, floating shelves, TV mounts, ceiling hooks, canopies, heavy mirrors. proReviewReason names who confirms blocking or anchors.',
   'Anchoring into stone, tile, or plaster over unknown framing sets needsProReview. Strapping furniture into a found stud is handyman work: route it to a handyman, and do not invoke load path for it.',
-  'Removing a fixture wired or plumbed in, or running a cord through a wall, sets needsProReview, naming who does it. Light hardware is DIY with no pro review: curtain rods, shade brackets, peg rails, picture hooks, adhesive strips, plug-in lights, and cords run along a baseboard. Say "DIY, no pro review" for these.',
+  'Removing a fixture wired or plumbed in, or running a cord through a wall, sets needsProReview, naming who does it. Light hardware is DIY with no pro review: curtain rods, shade brackets, peg rails, picture hooks, adhesive strips, plug-in lights, and cords run along a baseboard, and furniture anti-tip straps. Set needsProReview false for these and state in your own sentence that it is DIY.',
   'proReviewReason names the trade that matches the risk: structural engineer for load path, electrician for wiring, plumber for water, handyman for fastening.',
   'Mention a landlord, HOA, or historic district only when Q15 says one exists. When one does, never state that its approval is or is not needed. Say to ask them.',
   'Any scope statement in roomRead ("does not touch walls") must match every recommendation. If an item paints, anchors, or mounts on a wall, the statement cannot say otherwise.',

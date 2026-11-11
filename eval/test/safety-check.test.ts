@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { runChecks, type BriefEntry, type Critique } from '@foyer/rubric';
+import { runChecks, SAFETY_RULES, type BriefEntry, type Critique } from '@foyer/rubric';
 
 const brief = [{ questionId: 'Q07' }] as unknown as BriefEntry[];
 
@@ -161,4 +161,11 @@ test('rationale must name its citation', () => {
     ).filter((f) => f.dimension === 'traceability');
   assert.equal(run('Warm light, per Q07.').length, 0);
   assert.equal(run('Warm light.').length, 1);
+});
+
+test('anti-tip straps are DIY and the rules give no stock phrase to paste', () => {
+  const diy = SAFETY_RULES.find((r) => r.includes('Light hardware is DIY'))!;
+  assert.match(diy, /anti-tip straps/);
+  assert.doesNotMatch(diy, /Say "/);
+  assert.doesNotMatch(SAFETY_RULES.join(' '), /vanities or shelves/);
 });
