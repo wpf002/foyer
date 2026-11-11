@@ -29,7 +29,7 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
     <article>
       {header}
       {p.brief?.completedAt ? (
-        <ChatThread projectId={id} initial={messages} />
+        <ChatThread projectId={id} initial={messages} hasRoadmap={p.roadmapItems.length > 0} />
       ) : (
         <p className="mt-10 text-ink-muted">
           <Link href={`/projects/${id}`} className="text-clay underline-offset-4 hover:underline">

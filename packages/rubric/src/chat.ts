@@ -228,6 +228,39 @@ export interface ChatResult {
   usage: ModelUsage;
 }
 
+/**
+ * Enforced reply shape. Prose-only assistant turns in the history pull the
+ * model toward prose replies, so JSON is required by the API, not the prompt.
+ * Field values are still checked by sanitizeChanges.
+ */
+export const CHAT_REPLY_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['reply', 'changes'],
+  properties: {
+    reply: { type: 'string' },
+    changes: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['op'],
+        properties: {
+          op: { type: 'string', enum: ['add', 'remove', 'update'] },
+          recId: { type: 'string' },
+          roomId: { type: 'string' },
+          category: { type: 'string' },
+          title: { type: 'string' },
+          rationale: { type: 'string' },
+          citation: { type: 'string' },
+          effort: { type: 'string' },
+          needsProReview: { type: 'boolean' },
+        },
+      },
+    },
+  },
+} as const;
+
 export async function chatReply(ctx: ChatContext, history: ChatTurn[], userId: string): Promise<ChatResult> {
   const res = await call<{ reply?: unknown; changes?: unknown }>({
     task: 'design_chat',
@@ -240,7 +273,7 @@ export async function chatReply(ctx: ChatContext, history: ChatTurn[], userId: s
     messages: history.slice(-CHAT_HISTORY_TURNS),
     maxTokens: 16000,
     effort: 'medium',
-    json: true,
+    schema: CHAT_REPLY_SCHEMA,
   });
   const reply = typeof res.parsed?.reply === 'string' ? res.parsed.reply.trim() : '';
   if (!reply) throw new Error('Chat reply was empty');

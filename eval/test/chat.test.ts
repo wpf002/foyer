@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chatHistory, projectStateBlock, sanitizeChanges } from '../../packages/rubric/src/chat';
+import { CHAT_REPLY_SCHEMA, chatHistory, projectStateBlock, sanitizeChanges } from '../../packages/rubric/src/chat';
+import { buildBody } from '../../packages/ai/src/model';
 
 const scope = {
   roomIds: new Set(['room1']),
@@ -89,4 +90,19 @@ test('chatHistory drops a leading assistant turn left by the window', () => {
   assert.equal(turns[0]?.role, 'user');
   assert.equal(turns.at(-1)?.content, 'next');
   assert.ok(turns.length <= 20);
+});
+
+test('chat requests send the reply schema so prose-only replies cannot happen', () => {
+  const body = buildBody({
+    task: 'design_chat',
+    userId: 'u',
+    system: [{ text: 's' }],
+    messages: [{ role: 'user', content: 'hi' }],
+    effort: 'medium',
+    schema: CHAT_REPLY_SCHEMA,
+  });
+  assert.deepEqual(body.output_config, {
+    effort: 'medium',
+    format: { type: 'json_schema', schema: CHAT_REPLY_SCHEMA },
+  });
 });

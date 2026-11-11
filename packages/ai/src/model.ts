@@ -34,6 +34,8 @@ export interface ModelRequest {
   effort?: Effort;
   /** Reply must be JSON; parsed into `parsed`. */
   json?: boolean;
+  /** JSON Schema the reply must match, enforced by the API. Implies `json`. */
+  schema?: Record<string, unknown>;
 }
 
 export interface ModelUsage {
@@ -108,7 +110,14 @@ export function buildBody(req: ModelRequest): Record<string, unknown> {
     messages: req.messages,
     // Haiku parses short answers: thinking off. Other tiers think adaptively.
     ...(tier === 'cheap' ? { thinking: { type: 'disabled' } } : {}),
-    ...(req.effort ? { output_config: { effort: req.effort } } : {}),
+    ...(req.effort || req.schema
+      ? {
+          output_config: {
+            ...(req.effort ? { effort: req.effort } : {}),
+            ...(req.schema ? { format: { type: 'json_schema', schema: req.schema } } : {}),
+          },
+        }
+      : {}),
     // Server-side refusal fallback; not offered for Haiku.
     ...(model.includes('haiku') ? {} : { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' }),
     metadata: { user_id: req.userId },
@@ -183,6 +192,6 @@ export async function call<T = unknown>(req: ModelRequest): Promise<ModelRespons
 
   const res = (await transport(body, tierFor(req.task))) as ModelResponse<T>;
   ledger.record(req.userId, res.usage?.costUsd ?? 0);
-  if (res.parsed === undefined && req.json) res.parsed = extractJson<T>(res.text);
+  if (res.parsed === undefined && (req.json || req.schema)) res.parsed = extractJson<T>(res.text);
   return res;
 }

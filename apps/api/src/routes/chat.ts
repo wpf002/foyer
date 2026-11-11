@@ -11,6 +11,7 @@ import {
   type ParsedAnswer,
 } from '@foyer/rubric';
 import { bad, toRoomInput, userId } from './projects';
+import { rebuildRoadmap, type PlanTotal } from '../roadmap';
 
 const toDollars = (cents: number) => Math.round(cents / 100);
 
@@ -124,6 +125,7 @@ export async function chatRoutes(app: FastifyInstance) {
 
     const { reply: text, changes, usage } = await chatReply(contextOf(p), history, await userId());
     const writes = writesFor(p, changes);
+    const hadRoadmap = writes.length > 0 && (await prisma.roadmapItem.count({ where: { projectId: p.id } })) > 0;
 
     const [, saved] = await prisma.$transaction([
       prisma.chatMessage.create({ data: { projectId: p.id, role: 'USER', content: message } }),
@@ -140,6 +142,20 @@ export async function chatRoutes(app: FastifyInstance) {
       ...(writes.length ? [prisma.roadmapItem.deleteMany({ where: { projectId: p.id } })] : []),
       ...writes,
     ]);
-    return { message: saved, applied: changes.length, costUsd: usage.costUsd };
+
+    // Edits clear the roadmap. Rebuild it so costs stay current, but only if
+    // the homeowner had built one. A failed rebuild leaves the edit in place.
+    let plan: PlanTotal | null = null;
+    let rebuildCostUsd = 0;
+    if (hadRoadmap) {
+      try {
+        const built = await rebuildRoadmap(p.id, await userId());
+        plan = built?.plan ?? null;
+        rebuildCostUsd = built?.costUsd ?? 0;
+      } catch (err) {
+        req.log.error({ err, projectId: p.id }, 'roadmap rebuild after chat edit failed');
+      }
+    }
+    return { message: saved, applied: changes.length, plan, costUsd: usage.costUsd + rebuildCostUsd };
   });
 }

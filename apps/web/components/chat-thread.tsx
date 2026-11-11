@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, TextArea } from '@foyer/ui';
-import { send, type ApiChatChange, type ApiChatMessage } from '@/lib/api';
+import { Button, MoneyRange, TextArea } from '@foyer/ui';
+import { send, type ApiChatChange, type ApiChatMessage, type ApiPlanTotal } from '@/lib/api';
 
 const MAX_CHARS = 4000;
 
@@ -14,25 +14,51 @@ function changeLine(c: ApiChatChange): string {
   return c.title ? `Updated ${c.title}` : 'Updated An Item';
 }
 
-function Changes({ projectId, changes }: { projectId: string; changes: ApiChatChange[] }) {
+function Changes({
+  projectId,
+  changes,
+  plan,
+  hasRoadmap,
+}: {
+  projectId: string;
+  changes: ApiChatChange[];
+  plan?: ApiPlanTotal;
+  hasRoadmap: boolean;
+}) {
   return (
     <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line pt-3 text-xs text-ink-muted">
       {changes.map((c, i) => (
         <span key={i}>{changeLine(c)}</span>
       ))}
-      <Link href={`/projects/${projectId}/roadmap`} className="text-clay underline-offset-4 hover:underline">
-        Rebuild Roadmap
-      </Link>
+      {plan ? (
+        <Link href={`/projects/${projectId}/costs`} className="text-clay underline-offset-4 hover:underline">
+          Plan Now <MoneyRange lowCents={plan.lowCents} highCents={plan.highCents} />
+        </Link>
+      ) : hasRoadmap ? null : (
+        <Link href={`/projects/${projectId}/roadmap`} className="text-clay underline-offset-4 hover:underline">
+          Build Roadmap
+        </Link>
+      )}
     </div>
   );
 }
 
-export function ChatThread({ projectId, initial }: { projectId: string; initial: ApiChatMessage[] }) {
+export function ChatThread({
+  projectId,
+  initial,
+  hasRoadmap,
+}: {
+  projectId: string;
+  initial: ApiChatMessage[];
+  hasRoadmap: boolean;
+}) {
   const router = useRouter();
   const [messages, setMessages] = useState(initial);
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** New plan totals, by assistant message, for edits made this visit. */
+  const [plans, setPlans] = useState<Record<string, ApiPlanTotal>>({});
   const end = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -54,11 +80,13 @@ export function ChatThread({ projectId, initial }: { projectId: string; initial:
     setMessages((m) => [...m, pending]);
     setDraft('');
     try {
-      const res = await send<{ message: ApiChatMessage; applied: number }>(`/projects/${projectId}/chat`, {
+      const res = await send<{ message: ApiChatMessage; applied: number; plan: ApiPlanTotal | null }>(`/projects/${projectId}/chat`, {
         method: 'POST',
         body: JSON.stringify({ message }),
       });
       setMessages((m) => [...m, res.message]);
+      const { plan } = res;
+      if (plan) setPlans((p) => ({ ...p, [res.message.id]: plan }));
       if (res.applied) router.refresh();
     } catch (e) {
       setMessages((m) => m.filter((x) => x.id !== pending.id));
@@ -81,7 +109,9 @@ export function ChatThread({ projectId, initial }: { projectId: string; initial:
             ) : (
               <li key={m.id} className="card max-w-[44rem] px-6 py-5 leading-relaxed text-ink whitespace-pre-wrap">
                 {m.content}
-                {m.changes?.length ? <Changes projectId={projectId} changes={m.changes} /> : null}
+                {m.changes?.length ? (
+                  <Changes projectId={projectId} changes={m.changes} plan={plans[m.id]} hasRoadmap={hasRoadmap} />
+                ) : null}
               </li>
             ),
           )}

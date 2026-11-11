@@ -8,7 +8,6 @@ import { prisma, Prisma, type RoomType } from '@foyer/db';
 import { isStoredMime, photoKind, storablePhoto, type ImageMime } from '@foyer/ai';
 import {
   analyzePhotos,
-  buildRoadmap,
   critiqueRoom,
   mergeRead,
   parseIntake,
@@ -21,6 +20,7 @@ import {
 import { boardOf } from '@foyer/artifacts';
 import { readScan, regionFactor } from '@foyer/cost';
 import { priceProject } from '../pricing';
+import { rebuildRoadmap } from '../roadmap';
 
 const ROOM_TYPES: RoomType[] = ['KITCHEN', 'BATHROOM', 'LIVING', 'DINING', 'BEDROOM', 'ENTRY', 'OFFICE', 'BASEMENT', 'OUTDOOR', 'OTHER'];
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -444,52 +444,11 @@ export async function projectRoutes(app: FastifyInstance) {
   app.post<{ Params: { id: string } }>('/projects/:id/roadmap', async (req, reply) => {
     const p = await ownedProject(req.params.id);
     if (!p) return bad(reply, 'not_found', 404);
-    const recs = p.rooms.flatMap((room) =>
-      room.recommendations.map((r) => ({
-        id: r.id,
-        room: room.name,
-        category: r.category,
-        title: r.title,
-        rationale: r.rationale,
-        effort: r.effort,
-        needsProReview: r.needsProReview,
-        priority: r.priority,
-      })),
-    );
-    if (!recs.length) return bad(reply, 'Critique a room first', 409);
-    const { roadmap, model, usage } = await buildRoadmap(recs, await userId());
-    if (roadmap.notes.length) req.log.info({ projectId: p.id, notes: roadmap.notes }, 'roadmap adjusted');
-
-    await prisma.$transaction(async (tx) => {
-      await tx.roadmapItem.deleteMany({ where: { projectId: p.id } });
-      const itemOf = new Map<string, string>();
-      for (const it of roadmap.items) {
-        const row = await tx.roadmapItem.create({
-          data: {
-            projectId: p.id,
-            recommendationId: it.recId,
-            phase: it.phase,
-            order: it.order,
-            scope: it.scope,
-            why: it.why,
-            path: it.path,
-            permit: it.permit,
-            effort: it.effort,
-            riskNote: it.riskNote,
-          },
-        });
-        itemOf.set(it.recId, row.id);
-      }
-      await tx.roadmapDependency.createMany({
-        data: roadmap.edges.map((e) => ({
-          dependentId: itemOf.get(e.dependent)!,
-          prerequisiteId: itemOf.get(e.prerequisite)!,
-          reason: e.reason,
-        })),
-      });
-    });
-    const costs = await priceProject(p.id);
-    return { items: roadmap.items.length, edges: roadmap.edges.length, adjusted: roadmap.notes.length, ...costs, model, costUsd: usage.costUsd };
+    const built = await rebuildRoadmap(p.id, await userId());
+    if (!built) return bad(reply, 'Critique a room first', 409);
+    if (built.notes.length) req.log.info({ projectId: p.id, notes: built.notes }, 'roadmap adjusted');
+    const { notes, plan, ...rest } = built;
+    return { ...rest, adjusted: notes.length, priced: rest.items - plan.unpriced, unpriced: plan.unpriced };
   });
 
   /** Reprices from the baseline and the flywheel. No model call. */

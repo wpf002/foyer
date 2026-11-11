@@ -247,6 +247,12 @@ export type ApiChatChange =
   | { op: 'remove'; recId: string }
   | { op: 'update'; recId: string; title?: string };
 
+export interface ApiPlanTotal {
+  lowCents: number;
+  highCents: number;
+  unpriced: number;
+}
+
 export interface ApiChatMessage {
   id: string;
   role: 'USER' | 'ASSISTANT';
