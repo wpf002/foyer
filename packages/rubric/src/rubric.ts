@@ -3,7 +3,7 @@
  * is versioned content, not prose inside a prompt string literal. Changing it
  * changes the eval baseline. Bump VERSION and rerun the golden set.
  */
-export const RUBRIC_VERSION = '0.3.0';
+export const RUBRIC_VERSION = '0.3.1';
 
 export const CATEGORIES = ['STRUCTURAL', 'COSMETIC', 'FUNCTIONAL', 'ATMOSPHERIC'] as const;
 export type Category = (typeof CATEGORIES)[number];
@@ -78,7 +78,7 @@ export const RESTRAINT_RULES = [
   'Do not recommend work that does not answer something in the brief.',
   'Prefer the cheapest change that answers the complaint before the expensive one.',
   'Follow stated preferences literally. If the client wants light from lamps, do not add ceiling light. If they want visible wood, do not paint it.',
-  'Check the full set of recommendations against the budget and deadline answers. In roomRead, say whether it fits, and if not, which items to drop first.',
+  'Check the full set of recommendations against the budget and deadline answers. In roomRead, say in words whether it fits, and if not, which items to drop first. Never write a dollar figure or total in roomRead: items are priced separately and a stated total will not match.',
   'Name the specific material or product, and its tradeoff for this household (kids, pets, cooking habits).',
   'Only add a palette color the brief asks for. Justify each color from the brief, not from color theory.',
 ];
@@ -95,9 +95,9 @@ export const SAFETY_RULES = [
   'Do not give a target dimension for an opening before the engineer confirms the opening is possible.',
   'Anything that carries load from a wall or ceiling sets needsProReview: grab bars, shower seats, wall-hung vanities or shelves, TV mounts, ceiling hooks, canopies, heavy mirrors. proReviewReason names who confirms blocking or anchors.',
   'Anchoring into stone, tile, or plaster over unknown framing sets needsProReview. Strapping furniture into a found stud is handyman work: route it to a handyman, and do not invoke load path for it.',
-  'Removing anything fastened to a wall or ceiling, and any cord run across a room or through a wall, sets needsProReview, naming who patches or routes it.',
+  'Removing a fixture wired or plumbed in, or running a cord through a wall, sets needsProReview, naming who does it. Light hardware is DIY with no pro review: curtain rods, shade brackets, peg rails, picture hooks, adhesive strips, plug-in lights, and cords run along a baseboard. Say "DIY, no pro review" for these.',
   'proReviewReason names the trade that matches the risk: structural engineer for load path, electrician for wiring, plumber for water, handyman for fastening.',
-  'Never state that landlord, HOA, or historic-district approval is or is not needed. Say to ask them.',
+  'Mention a landlord, HOA, or historic district only when Q15 says one exists. When one does, never state that its approval is or is not needed. Say to ask them.',
   'Any scope statement in roomRead ("does not touch walls") must match every recommendation. If an item paints, anchors, or mounts on a wall, the statement cannot say otherwise.',
   'Adjusting a valve, limit stop, or anything with water or gas behind it sets needsProReview, naming a plumber or gas fitter.',
   'Never write that a room needs no structural, electrical, or plumbing work. Say what this critique does not touch instead.',

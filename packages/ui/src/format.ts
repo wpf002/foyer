@@ -14,3 +14,14 @@ export function budgetLabel(lowCents: number | null, highCents: number | null): 
   if (lowCents) return `${money(lowCents)}+`;
   return undefined;
 }
+
+const SMALL_WORDS = new Set(['a', 'an', 'and', 'or', 'of', 'to', 'in', 'on', 'for', 'the', 'with']);
+
+/** Title Case for tags written in sentence case or snake_case. Keeps acronyms and $ figures as written. */
+export function titleCase(text: string): string {
+  return text
+    .replace(/_/g, ' ')
+    .split(' ')
+    .map((w, i) => (i > 0 && SMALL_WORDS.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)))
+    .join(' ');
+}

@@ -1,7 +1,31 @@
 import { notFound } from 'next/navigation';
-import { Chip } from '@foyer/ui';
+import { Chip, titleCase } from '@foyer/ui';
 import { api, isSample, STATUS_LABEL, type ApiProject } from '@/lib/api';
 import { brief, project, SECTIONS, type Section } from '@/lib/mock';
+
+/** Flags are internal keys; show the client a plain label. */
+const FLAG_LABEL: Record<string, string> = {
+  possible_structural_change: 'Possible Structural Work',
+  historic_district_unknown: 'Historic District Unknown',
+  hoa_review: 'HOA Review',
+  renter: 'Renter',
+  hard_deadline: 'Hard Deadline',
+  large_pet: 'Large Pet',
+  young_children: 'Young Children',
+  multigenerational: 'Multigenerational',
+  accessibility_need: 'Accessibility Need',
+  hand_measured: 'Hand-Measured',
+  no_measurements: 'No Measurements',
+};
+
+/** Q12 tags saved before 0.3.1 used an internal scale. */
+const LEGACY_TAG: Record<string, string> = {
+  'Low quiet': 'Open Display',
+  'Medium quiet': 'Some Display',
+  'High quiet': 'Minimal Display',
+  'Display welcome': 'Collections Welcome',
+};
+const tagLabel = (tag: string) => LEGACY_TAG[tag] ?? titleCase(tag);
 
 interface Entry {
   id: string;
@@ -24,7 +48,9 @@ export default async function BriefPage({ params }: { params: Promise<{ id: stri
     if (!p) notFound();
     entries = (p.brief?.answers ?? []).map((a) => ({
       ...a,
-      parsed: a.parsed ? [...a.parsed.tags, ...a.parsed.flags] : null,
+      parsed: a.parsed
+        ? [...new Set([...a.parsed.tags.map(tagLabel), ...a.parsed.flags.map((f) => FLAG_LABEL[f] ?? titleCase(f))])]
+        : null,
     }));
     status = STATUS_LABEL[p.status] ?? p.status;
   }

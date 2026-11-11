@@ -1,7 +1,7 @@
 import { cx } from './cx';
 import { money } from './format';
 
-export { budgetLabel, money } from './format';
+export { budgetLabel, money, titleCase } from './format';
 
 /* -------------------------------------------------------------------------- */
 /* Money — ranges only. A point estimate claims precision we do not have.     */
@@ -16,6 +16,7 @@ export function MoneyRange({
   highCents: number;
   className?: string;
 }) {
+  if (highCents === 0) return <span className={cx('whitespace-nowrap', className)}>No Cost</span>;
   return (
     <span className={cx('whitespace-nowrap tabular-nums', className)}>
       {money(lowCents)}

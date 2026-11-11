@@ -96,7 +96,7 @@ export const brief: BriefAnswer[] = [
   { id: 'a09', questionId: 'Q09', section: 'AESTHETIC', short: 'References', prompt: 'Any rooms you like? Describe them or skip.', raw: 'All three had plaster walls, visible wood, and almost no hardware showing.', parsed: ['Plaster', 'Warm wood', 'Minimal hardware'] },
   { id: 'a10', questionId: 'Q10', section: 'AESTHETIC', short: 'Keep', prompt: 'What stays exactly as it is?', raw: 'The oak floors. They are original and I will not cover them.', parsed: ['Original oak floors'] },
   { id: 'a11', questionId: 'Q11', section: 'AESTHETIC', short: 'Veto', prompt: "Colors or materials you can't live with?", raw: 'Cool grey. Greige. Anything that reads blue in daylight. No subway tile.', parsed: ['No cool grey', 'No subway tile'] },
-  { id: 'a12', questionId: 'Q12', section: 'AESTHETIC', short: 'Quiet', prompt: 'How much stuff out on shelves is OK?', raw: 'A lot. Closed storage wherever possible. Open shelves become a mess within a week.', parsed: ['High quiet', 'Closed storage'] },
+  { id: 'a12', questionId: 'Q12', section: 'AESTHETIC', short: 'Quiet', prompt: 'How much stuff out on shelves is OK?', raw: 'A lot. Closed storage wherever possible. Open shelves become a mess within a week.', parsed: ['Minimal Display', 'Closed Storage'] },
   { id: 'a13', questionId: 'Q13', section: 'CONSTRAINTS', short: 'Budget', prompt: 'What can you spend?', raw: '$25k To $50k', parsed: ['$25k-$50k'] },
   { id: 'a14', questionId: 'Q14', section: 'CONSTRAINTS', short: 'Timeline', prompt: 'Timeline and hard dates?', raw: 'Start in spring. Kitchen has to work by the end of August, school starts.', parsed: ['Spring start', 'Hard date: late Aug'] },
   { id: 'a15', questionId: 'Q15', section: 'CONSTRAINTS', short: 'Tenure', prompt: 'Own or rent? HOA or landmark district?', raw: 'We own it. No HOA. It is not in a historic district as far as I know.', parsed: ['Owner', 'No HOA', 'No district (unconfirmed)'] },
@@ -201,9 +201,9 @@ export const roadmap: RoadmapItem[] = [
 ];
 
 export const PHASES: { key: Phase; label: string; band: string; n: string }[] = [
-  { key: 'QUICK_WINS', label: 'Quick Wins', band: 'Under $500 · DIY · A Weekend', n: '01' },
-  { key: 'MID_RANGE', label: 'Mid-Range', band: 'Under $5k · Simple Contractor', n: '02' },
-  { key: 'MAJOR', label: 'Major', band: '$10k+ · Licensed · Permits', n: '03' },
+  { key: 'QUICK_WINS', label: 'Quick Wins', band: 'DIY · A Weekend', n: '01' },
+  { key: 'MID_RANGE', label: 'Mid-Range', band: 'Simple Contractor', n: '02' },
+  { key: 'MAJOR', label: 'Major', band: 'Licensed · Permits', n: '03' },
 ];
 
 export const artifacts = [

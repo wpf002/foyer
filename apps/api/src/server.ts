@@ -1,6 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { ModelError, SpendCapExceeded } from '@foyer/ai';
+import { ModelError, publicModelMessage, SpendCapExceeded } from '@foyer/ai';
 import { health } from './routes/health';
 import { costRoutes } from './routes/cost';
 import { accountRoutes } from './routes/accounts';
@@ -19,7 +19,7 @@ app.setErrorHandler((err, _req, reply) => {
   }
   if (err instanceof ModelError) {
     app.log.warn(err);
-    return reply.code(err.status === 422 ? 422 : 502).send({ error: 'model', message: err.message });
+    return reply.code(err.status === 422 ? 422 : 502).send({ error: 'model', message: publicModelMessage(err.status) });
   }
   app.log.error(err);
   return reply.code(err.statusCode ?? 500).send({ error: 'internal' });

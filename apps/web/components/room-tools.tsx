@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, TextInput } from '@foyer/ui';
-import { send } from '@/lib/api';
+import { send, sendWithProgress } from '@/lib/api';
 
 const TYPES = ['Kitchen', 'Bathroom', 'Living', 'Dining', 'Bedroom', 'Entry', 'Office', 'Basement', 'Outdoor', 'Other'];
 
@@ -88,6 +88,7 @@ export function RoomTools({
   critiqued: boolean;
 }) {
   const { run, busy, error } = useAction();
+  const [uploaded, setUploaded] = useState(0);
   const file = useRef<HTMLInputElement>(null);
   const scanFile = useRef<HTMLInputElement>(null);
 
@@ -106,11 +107,12 @@ export function RoomTools({
             if (!files.length) return;
             const body = new FormData();
             files.forEach((f) => body.append('photo', f));
-            void run('upload', () => send(`/rooms/${roomId}/photos`, { method: 'POST', body }));
+            setUploaded(0);
+            void run('upload', () => sendWithProgress(`/rooms/${roomId}/photos`, body, setUploaded));
           }}
         />
         <Button variant="secondary" size="sm" disabled={!!busy} onClick={() => file.current?.click()}>
-          {busy === 'upload' ? 'Uploading…' : 'Add Photos'}
+          {busy === 'upload' ? (uploaded < 1 ? `Uploading ${Math.round(uploaded * 100)}%` : 'Processing…') : 'Add Photos'}
         </Button>
         <input
           ref={scanFile}

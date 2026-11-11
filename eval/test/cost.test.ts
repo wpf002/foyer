@@ -58,3 +58,23 @@ test('flywheel blends only past the minimum, toward the local median', () => {
   assert.equal(many.midCents, 66000);
   assert.ok(many.midCents > base.midCents);
 });
+
+test('small items map to small work types, not doors, furniture or $0', () => {
+  const cases: [string, string, string][] = [
+    ['Add A Folding Luggage Rack', 'Sits by the closet door.', 'small_accessory'],
+    ['Contain Desk Cables In A Tray', '', 'small_accessory'],
+    ['Get Bags Off The Floor', 'Two wall hooks by the door.', 'small_accessory'],
+    ['Add A Storage Ottoman As A Landing Surface', '', 'accent_piece'],
+    ['Add Two Poufs For Overflow Guest Seating', 'Pull them out when friends visit.', 'accent_piece'],
+    ['Swap Chandelier Bulbs To 2700K', '', 'bulb_swap'],
+    ['Put Warm Dimmable Bulbs And Plug-In Dimmers On The Lamps', '', 'bulb_swap'],
+    ['Replace The Door Shade To Stop Edge Glare', '', 'window_treatment'],
+    ['Replace The Dining Chandelier', '', 'light_fixture_swap'],
+  ];
+  for (const [title, rationale, workType] of cases) assert.equal(s(title, rationale)?.workType, workType, title);
+  assert.equal(s('Add Two Poufs For Overflow Guest Seating')?.quantity, 2);
+});
+
+test('countOf skips dollar figures', () => {
+  assert.equal(s('Get Bags Off The Floor', 'About $25 to $50 for a bin next to the bench.')?.quantity, 1);
+});

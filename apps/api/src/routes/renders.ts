@@ -4,7 +4,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { prisma, type Prisma } from '@foyer/db';
-import { conceptPrompt, ModelError, renderConcept, SpendCapExceeded } from '@foyer/ai';
+import { conceptPrompt, ModelError, publicModelMessage, renderConcept, SpendCapExceeded } from '@foyer/ai';
 import { BOARD_GENERATOR, buildBoard, type Board } from '@foyer/artifacts';
 import { ownedProject, uploadDir, userId } from './projects';
 
@@ -99,7 +99,10 @@ export async function renderRoutes(app: FastifyInstance) {
       return reply.code(201).send({ id: row.id, url: `/v1/renders/${row.id}/file` });
     } catch (e) {
       if (e instanceof SpendCapExceeded) return reply.code(429).send({ error: 'Spend cap reached' });
-      if (e instanceof ModelError) return reply.code(e.status === 503 ? 503 : 502).send({ error: e.message });
+      if (e instanceof ModelError) {
+        req.log.error({ err: e }, 'render failed');
+        return reply.code(e.status === 503 ? 503 : 502).send({ error: publicModelMessage(e.status) });
+      }
       throw e;
     }
   });

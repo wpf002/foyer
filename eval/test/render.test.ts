@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { conceptPrompt, ledger, renderConcept } from '@foyer/ai';
+import { conceptPrompt, ledger, ModelError, publicModelMessage, renderConcept } from '@foyer/ai';
 import { regionFactor, STATE_FACTOR_SOURCE } from '@foyer/cost';
 
 test('concept prompt carries only the recommendation', () => {
@@ -38,4 +38,11 @@ test('state factors come from BLS construction wages', () => {
   assert.equal(mt.basis, 'state');
   assert.ok(mt.factor > 0.8 && mt.factor < 1.2);
   assert.ok(regionFactor('39201').factor < regionFactor('98501').factor, 'MS under WA');
+});
+
+test('publicModelMessage never echoes provider detail', () => {
+  const raw = new ModelError('fal 500: {"detail":"internal stack trace"}', 502);
+  assert.doesNotMatch(publicModelMessage(raw.status), /fal|detail|500/);
+  assert.equal(publicModelMessage(503), 'Service Unavailable. Try Again Later.');
+  assert.equal(publicModelMessage(422), 'Request Declined');
 });

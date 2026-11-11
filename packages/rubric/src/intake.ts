@@ -95,9 +95,9 @@ export const QUESTIONS: Question[] = [
     section: 'AESTHETIC',
     prompt: 'How much stuff out on shelves is OK?',
     choices: {
-      'Lots Is Fine': p(['Low quiet', 'Display welcome']),
-      'Some': p(['Medium quiet']),
-      'Very Little': p(['High quiet', 'Closed storage']),
+      'Lots Is Fine': p(['Open display', 'Collections welcome']),
+      'Some': p(['Some display']),
+      'Very Little': p(['Minimal display', 'Closed storage']),
     },
   },
   {

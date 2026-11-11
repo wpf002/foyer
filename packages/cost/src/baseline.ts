@@ -52,6 +52,8 @@ const STATIC: Record<string, BaselineLine> = {
   vanity_replace: { workType: 'vanity_replace', label: 'Vanity Replace', unit: 'each', lowCents: 80000, midCents: 180000, highCents: 400000 },
   faucet_replace: { workType: 'faucet_replace', label: 'Faucet Replace', unit: 'each', lowCents: 25000, midCents: 50000, highCents: 100000 },
   door_replace: { workType: 'door_replace', label: 'Interior Door', unit: 'each', lowCents: 50000, midCents: 110000, highCents: 250000 },
+  small_accessory: { workType: 'small_accessory', label: 'Small Accessory', unit: 'each', lowCents: 2000, midCents: 6000, highCents: 20000 },
+  accent_piece: { workType: 'accent_piece', label: 'Accent Piece', unit: 'each', lowCents: 10000, midCents: 30000, highCents: 80000 },
   rearrange: { workType: 'rearrange', label: 'Rearrange Existing', unit: 'room', lowCents: 0, midCents: 0, highCents: 0 },
   panel_upgrade: { workType: 'panel_upgrade', label: 'Electrical Panel Upgrade', unit: 'job', lowCents: 180000, midCents: 285000, highCents: 450000 },
 };

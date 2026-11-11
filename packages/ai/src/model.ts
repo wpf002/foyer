@@ -63,6 +63,16 @@ export class ModelError extends Error {
   }
 }
 
+/**
+ * What a client sees for a ModelError. The raw message can carry provider
+ * response bodies and config names, so it stays in server logs.
+ */
+export function publicModelMessage(status: number): string {
+  if (status === 503) return 'Service Unavailable. Try Again Later.';
+  if (status === 422) return 'Request Declined';
+  return 'Generation Failed. Try Again.';
+}
+
 /** Sends a built request body. Swapped in tests so nothing leaves the process. */
 export type Transport = (body: Record<string, unknown>, tier: Tier) => Promise<ModelResponse>;
 

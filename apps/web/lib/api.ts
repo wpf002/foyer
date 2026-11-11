@@ -200,9 +200,47 @@ export async function send<T = unknown>(path: string, init: RequestInit = {}): P
     ...init,
     headers: json ? { 'content-type': 'application/json', ...init.headers } : init.headers,
   });
-  const body = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
-  if (!res.ok) throw new Error(body.message ?? body.error ?? `Request failed (${res.status})`);
+  const body = (await res.json().catch(() => ({}))) as ApiErrorBody;
+  if (!res.ok) throw new Error(apiErrorMessage(res.status, body));
   return body as T;
+}
+
+interface ApiErrorBody {
+  error?: string;
+  message?: string;
+}
+
+const apiErrorMessage = (status: number, body: ApiErrorBody) =>
+  body.message ?? body.error ?? `Request failed (${status})`;
+
+/**
+ * Browser-side multipart POST that reports upload progress as 0-1.
+ * fetch has no upload progress events, so this uses XMLHttpRequest.
+ */
+export function sendWithProgress<T = unknown>(
+  path: string,
+  body: FormData,
+  onProgress: (fraction: number) => void,
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `/api/v1${path}`);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(e.loaded / e.total);
+    };
+    xhr.onload = () => {
+      let parsed: ApiErrorBody = {};
+      try {
+        parsed = JSON.parse(xhr.responseText) as ApiErrorBody;
+      } catch {
+        // Non-JSON body: fall back to the status code below.
+      }
+      if (xhr.status >= 200 && xhr.status < 300) resolve(parsed as T);
+      else reject(new Error(apiErrorMessage(xhr.status, parsed)));
+    };
+    xhr.onerror = () => reject(new Error('Upload failed. Check your connection.'));
+    xhr.send(body);
+  });
 }
 
 export const STATUS_LABEL: Record<string, string> = {

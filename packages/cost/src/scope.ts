@@ -32,7 +32,7 @@ const WORDS: Record<string, number> = { a: 1, an: 1, one: 1, pair: 2, two: 2, th
 
 /** "Two sconces", "3 pendants", "a pair of lamps". */
 export function countOf(text: string, nouns: string, fallback: number): number {
-  const m = new RegExp(`\\b(\\d+|a pair of|${Object.keys(WORDS).join('|')})\\s+(?:[\\w-]+\\s+){0,2}?(?:${nouns})`, 'i').exec(text);
+  const m = new RegExp(`(?<![$\\d.,])\\b(\\d+|a pair of|${Object.keys(WORDS).join('|')})\\s+(?:[\\w-]+\\s+){0,2}?(?:${nouns})`, 'i').exec(text);
   if (!m) return fallback;
   const k = m[1]!.toLowerCase().replace(/^a pair of$/, 'pair');
   const n = Number(k) || WORDS[k] || fallback;
@@ -118,6 +118,8 @@ const RULES: { workType: string; test: RegExp; q: Q }[] = [
   { workType: 'panel_upgrade', test: /\bpanel\b|\bservice upgrade\b/i, q: once('1 panel') },
   { workType: 'recessed_light', test: /\b(recessed|can lights?|downlights?)\b/i, q: each('recessed|cans?|downlights?|lights?', 4, 'light') },
   { workType: 'sconce_install', test: /\bsconces?\b/i, q: each('sconces?', 2, 'sconce') },
+  // Bulbs before fixtures: "swap the chandelier bulbs" is a bulb swap.
+  { workType: 'bulb_swap', test: /\bbulbs?\b|\bplug-in dimmers?\b/i, q: once('1 room of bulbs') },
   { workType: 'light_fixture_swap', test: /\b(pendants?|chandelier|flush ?mount|ceiling fixture|light fixture|lighting)\b/i, q: each('pendants?|chandeliers?|fixtures?|lights?', 1, 'fixture') },
   { workType: 'dimmer_switch', test: /\bdimmers?\b/i, q: each('dimmers?|switch(?:es)?', 2, 'dimmer') },
   { workType: 'bulb_swap', test: /\b(bulbs?|\d{4}\s?k\b|kelvin|color temperature)\b/i, q: once('1 room of bulbs') },
@@ -141,6 +143,8 @@ const RULES: { workType: string; test: RegExp; q: Q }[] = [
   { workType: 'window_treatment', test: /\b(curtains?|drapes?|drapery|shades?|blinds?|window treatments?|curtain rods?)\b/i, q: each('windows?|panels?|shades?', 2, 'window') },
   { workType: 'built_in_storage', test: /\b(built-?ins?|millwork|banquette|window seat)\b/i, q: run(8) },
   { workType: 'shelving', test: /\bshel(f|ves|ving)\b/i, q: run(6) },
+  { workType: 'small_accessory', test: /\b(racks?|trays?|baskets?|bins?|organizers?|hampers?|caddy|caddies|cables?|cords?|bags?|wall hooks?|peg rails?|bookends?)\b/i, q: each('racks?|trays?|baskets?|bins?|organizers?|hampers?|hooks?|rails?', 1, 'piece') },
+  { workType: 'accent_piece', test: /\b(ottomans?|poufs?|side tables?|stools?|benches?|garden stools?)\b/i, q: each('ottomans?|poufs?|tables?|stools?|benches?', 1, 'piece') },
   { workType: 'entry_storage', test: /\b(bench|hooks|drop zone|landing strip)\b/i, q: once('1 bench and hooks') },
   { workType: 'reupholster', test: /\b(reupholster|recover|slipcover)\b/i, q: each('chairs?|sofas?|pieces?|ottomans?', 1, 'piece') },
   { workType: 'door_replace', test: /\b(replace|swap|new)\b.*\bdoors?\b/i, q: each('doors?', 1, 'door') },
