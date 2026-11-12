@@ -3,7 +3,7 @@
  * is versioned content, not prose inside a prompt string literal. Changing it
  * changes the eval baseline. Bump VERSION and rerun the golden set.
  */
-export const RUBRIC_VERSION = '0.3.3';
+export const RUBRIC_VERSION = '1.0.0';
 
 export const CATEGORIES = ['STRUCTURAL', 'COSMETIC', 'FUNCTIONAL', 'ATMOSPHERIC'] as const;
 export type Category = (typeof CATEGORIES)[number];
