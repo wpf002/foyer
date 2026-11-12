@@ -12,6 +12,7 @@ import {
   critiqueRoom,
   critiqueSystemPrompt,
   enforceDrilling,
+  fitBudget,
   enforceSafety,
   enforceTrades,
   syncSupporting,
@@ -130,6 +131,12 @@ function gate(cases: GoldenCase[], passed: boolean): string[] {
 const NATIONAL_ZIP = '';
 const dollars = (cents: number) => `$${Math.round(cents / 100).toLocaleString('en-US')}`;
 
+/** Baseline low price of one item, the same scope and price the app uses. */
+const lowCentsAt = (room: RoomInput) => (rec: Critique['recommendations'][number]) => {
+  const scope = scopeOf({ title: rec.title, rationale: rec.rationale, category: rec.category, room });
+  return scope ? (price(scope, NATIONAL_ZIP)?.lowCents ?? null) : null;
+};
+
 /** The block the judge sees under "## Priced items": what the app shows next to the plan. */
 function pricingBlock(critique: Critique, room: RoomInput, brief: BriefEntry[]): string {
   const lines = critique.recommendations.map((rec) => {
@@ -177,7 +184,7 @@ async function runCase(c: GoldenCase): Promise<CaseResult> {
     store(ck, critique);
   }
   // Cached critiques predate enforcement; it's idempotent, so apply it every time.
-  critique = syncSupporting(enforceDrilling(enforceTrades(enforceSafety(critique)), brief), brief);
+  critique = fitBudget(syncSupporting(enforceDrilling(enforceTrades(enforceSafety(critique)), brief), brief), brief, lowCentsAt(room));
 
   const checks = runChecks(critique, brief);
   const { judgement } = await judge(brief, room, critique, checks, USER, pricingBlock(critique, room, brief));

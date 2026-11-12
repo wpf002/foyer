@@ -149,7 +149,7 @@ const RULES: { workType: string; test: RegExp; q: Q }[] = [
   { workType: 'reupholster', test: /\b(reupholster|recover|slipcover)\b/i, q: each('chairs?|sofas?|pieces?|ottomans?', 1, 'piece') },
   { workType: 'door_replace', test: /\b(replace|swap|new)\b.*\bdoors?\b/i, q: each('doors?', 1, 'door') },
   { workType: 'art_hanging', test: /\b(art|mirror|gallery wall|hang)\b/i, q: each('pieces?|mirrors?|prints?|frames?', 1, 'piece') },
-  { workType: 'rearrange', test: /\b(rearrange|pull|float|move|shift|rotate|edit|declutter|clear|swap places|reposition)\b/i, q: once('existing pieces') },
+  { workType: 'rearrange', test: /\b(rearrange|regroup|pull|float|move|shift|rotate|edit|declutter|clear|swap places|reposition)\b/i, q: once('existing pieces') },
   { workType: 'furniture_piece', test: /\b(sofa|sectional|table|chairs?|bed|dresser|console|ottoman|nightstands?|desk|stools?)\b/i, q: each('sofas?|tables?|chairs?|stools?|nightstands?|pieces?', 1, 'piece') },
 ];
 
