@@ -3,7 +3,7 @@
  * is versioned content, not prose inside a prompt string literal. Changing it
  * changes the eval baseline. Bump VERSION and rerun the golden set.
  */
-export const RUBRIC_VERSION = '0.3.2';
+export const RUBRIC_VERSION = '0.3.3';
 
 export const CATEGORIES = ['STRUCTURAL', 'COSMETIC', 'FUNCTIONAL', 'ATMOSPHERIC'] as const;
 export type Category = (typeof CATEGORIES)[number];
@@ -78,7 +78,7 @@ export const RESTRAINT_RULES = [
   'Do not recommend work that does not answer something in the brief.',
   'Prefer the cheapest change that answers the complaint before the expensive one.',
   'Follow stated preferences literally. If the client wants light from lamps, do not add ceiling light. If they want visible wood, do not paint it.',
-  'Check the full set of recommendations against the budget and deadline answers. In roomRead, say in words whether it fits, and if not, which items to drop first. Never write a dollar figure or total in roomRead: items are priced separately and a stated total will not match.',
+  'Check the full set of recommendations against the deadline answer. You cannot see item prices, so never say whether the set fits the budget. In roomRead, say which items to drop first if the priced total runs over. Never write a dollar figure or total in roomRead.',
   'Name the specific material or product, and its tradeoff for this household (kids, pets, cooking habits).',
   'Only add a palette color the brief asks for. Justify each color from the brief, not from color theory.',
 ];
@@ -87,7 +87,7 @@ export const SAFETY_RULES = [
   'Never state whether a wall is or is not load-bearing. Flag it and route to a structural engineer.',
   'Never assert that a permit is or is not required. Flag likelihood and point at the local building department.',
   'Any recommendation that opens, moves, or removes a wall, widens an opening, or relocates gas or plumbing sets needsProReview.',
-  'Any new or moved wiring, circuit, outlet, or hardwired fixture sets needsProReview, with proReviewReason naming a licensed electrician. Bulb swaps and plug-in or battery fixtures do not; say which kind you mean.',
+  'Any new or moved wiring, circuit, outlet, or hardwired fixture sets needsProReview, with proReviewReason naming a licensed electrician. Bulb swaps and plug-in or battery fixtures do not, including taking a plug-in fixture down; say which kind you mean.',
   'If a rationale mentions an engineer, electrician, plumber, or permit, needsProReview is true. No exceptions.',
   'Keep DIY items self-contained. Do not mention trade work from another recommendation in a DIY rationale; put that step in the item that needs the trade.',
   'Demolition, sanding, or opening walls in a house built before 1978 says to test for lead paint first, and before 1985 for asbestos.',
@@ -96,6 +96,7 @@ export const SAFETY_RULES = [
   'Anything that carries load from a wall or ceiling sets needsProReview: grab bars, shower seats, wall-hung vanities, floating shelves, TV mounts, ceiling hooks, canopies, heavy mirrors. proReviewReason names who confirms blocking or anchors.',
   'Anchoring into stone, tile, or plaster over unknown framing sets needsProReview. Strapping furniture into a found stud is handyman work: route it to a handyman, and do not invoke load path for it.',
   'Removing a fixture wired or plumbed in, or running a cord through a wall, sets needsProReview, naming who does it. Light hardware is DIY with no pro review: curtain rods, shade brackets, peg rails, picture hooks, adhesive strips, plug-in lights, and cords run along a baseboard, and furniture anti-tip straps. Set needsProReview false for these and state in your own sentence that it is DIY.',
+  'Any item that screws or drills into a wall, stud, or frame says to check the spot for live wiring and pipes first. For a renter (Q15), it also says to ask the landlord before drilling. This stays DIY.',
   'proReviewReason names the trade that matches the risk: structural engineer for load path, electrician for wiring, plumber for water, handyman for fastening.',
   'Mention a landlord, HOA, or historic district only when Q15 says one exists. When one does, never state that its approval is or is not needed. Say to ask them.',
   'Any scope statement in roomRead ("does not touch walls") must match every recommendation. If an item paints, anchors, or mounts on a wall, the statement cannot say otherwise.',

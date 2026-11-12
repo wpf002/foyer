@@ -2,7 +2,7 @@ import { call, type ModelUsage } from '@foyer/ai';
 import { CATEGORIES, EFFORT, type Category, type Effort } from './rubric';
 import type { BriefEntry } from './intake';
 import { briefBlock, critiqueSystemPrompt, roomMessage } from './prompts';
-import { enforceSafety, enforceTrades, syncSupporting } from './checks';
+import { enforceDrilling, enforceSafety, enforceTrades, syncSupporting } from './checks';
 
 /** Text-only room description. Phase 2 replaces `description` with the vision read. */
 export interface RoomInput {
@@ -151,5 +151,5 @@ export async function critiqueRoom(brief: BriefEntry[], room: RoomInput, userId:
   });
   const errs = shapeErrors(res.parsed);
   if (errs.length) throw new Error(`Critique failed shape check: ${errs.join('; ')}`);
-  return { critique: syncSupporting(enforceTrades(enforceSafety(res.parsed as Critique)), brief), model: res.model, usage: res.usage };
+  return { critique: syncSupporting(enforceDrilling(enforceTrades(enforceSafety(res.parsed as Critique)), brief), brief), model: res.model, usage: res.usage };
 }

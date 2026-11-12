@@ -140,6 +140,25 @@ const ANCHOR_MASONRY = /\b(?:anchor|mount|drill|fasten|screw|bolt)\w*\b[^.]{0,40
 const FIXTURE_REMOVAL =
   /\b(?:remove|take down|swap|replace)\b(?:(?!\b(?:bulbs?|lamps?|shades?)\b)[^.]){0,30}\b(?:ceiling fixture|light fixture|pendant|chandelier|sconce|fan)s?\b(?!\s*(?:bulbs?|lamps?|shades?))/gi;
 
+/** A corded or battery fixture comes down without an electrician. */
+const PLUG_IN = /\b(?:plug-in|plugged[- ]in|plugs? in|corded|cords?|battery|rechargeable)\b/i;
+const WIRED_IN = /\b(?:hardwire\w*|wired[- ]in|junction box|ceiling box|electrical box)\b/i;
+
+function removesWiredFixture(text: string): boolean {
+  return text
+    .split(/(?<=[.!?])\s+/)
+    .some((s) => mentions(s, FIXTURE_REMOVAL) && !(PLUG_IN.test(s) && !WIRED_IN.test(s)));
+}
+
+const BUDGET_FIT_CLAIM =
+  /\b(?:fits?|fitting|within|under|inside|over|exceeds?|stays?|comes? in)\b[^.]{0,50}\bbudget\b|\bbudget\b[^.]{0,60}\b(?:fits?|fit|covers?|is enough|holds)\b/i;
+
+/** The model can't see prices, so a fit verdict in roomRead is a guess. The app compares the priced total. */
+function budgetFix(s: string): string {
+  const cite = s.match(/\bQ\d{2}\b/)?.[0];
+  return `Compare the priced total against the budget${cite ? ` (${cite})` : ''} before buying.`;
+}
+
 const APPROVAL_PARTY = /\b(landlord|HOA|condo board|co-op board|historic(?:al)? (?:commission|board|district)|preservation (?:commission|board))\b/i;
 const APPROVAL_WORD = /\b(?:approv\w*|permission|consent|sign[- ]off)\b/i;
 const APPROVAL_DEFINITE = /\b(?:needs?|requires?|required|needed|won't|will not|doesn't|does not|don't|do not|no|isn't|is not|aren't|are not)\b/i;
@@ -203,6 +222,7 @@ function rewriteSentence(s: string, roomRead: boolean): string {
   }
   if (NO_PRO_CLAIM.test(s) && (roomRead || STRUCTURE_WORD.test(s))) return '';
   if (roomRead && SCOPE_CLAIM.test(s)) return '';
+  if (roomRead && BUDGET_FIT_CLAIM.test(s) && !CONDITIONAL.test(s)) return budgetFix(s);
   return s;
 }
 
@@ -229,7 +249,7 @@ export function needsPro(r: Pick<CritiqueRec, 'category' | 'title' | 'rationale'
     r.category === 'STRUCTURAL' ||
     mentions(text, STRUCTURAL_WORK) ||
     mentions(text, ELECTRICAL_WORK) ||
-    mentions(text, FIXTURE_REMOVAL) ||
+    removesWiredFixture(text) ||
     mentions(text, PRO_MENTION) ||
     STOVE_CLEARANCE.test(text) ||
     HAZMAT_TEST.test(text);
@@ -262,6 +282,30 @@ export function enforceSafety(c: Critique): Critique {
       r.proReviewReason = reason();
     }
     if (r.needsProReview && !r.proReviewReason?.trim()) r.proReviewReason = reason();
+  }
+  return out;
+}
+
+// Drilling into a wall or frame. Light hardware stays DIY, but the item says to
+// check for wiring and pipes first, and a renter asks the landlord.
+const DRILLS =
+  /\b(?:screws?|screwed|screwing|drill\w*|anchors?|anchored|mount\w*|fasten\w*)\b[^.]{0,60}\b(?:studs?|walls?|paneling|panelling|window frames?|frame head|door frames?|casing|plaster|drywall)\b/gi;
+const SERVICES_CHECKED = /\b(?:live (?:AC|wires?|wiring)|AC detection|detects? (?:live )?(?:AC|wiring|wires))\b/i;
+const LANDLORD = /\blandlord\b/i;
+export const DRILL_NOTE =
+  'Before drilling, check the spot with a stud finder that detects live AC wiring, and stay off the vertical line above and below outlets, switches and radiators, where wires and pipes run.';
+export const RENTAL_DRILL_NOTE = 'As a renter, ask your landlord before drilling.';
+
+/** Adds the wiring check, and the landlord check for renters, to items that drill into walls. Idempotent. */
+export function enforceDrilling(c: Critique, brief: BriefEntry[]): Critique {
+  const renter = brief.some(
+    (b) => b.questionId === 'Q15' && ((b.parsed?.flags ?? []).includes('renter') || /\brent(?:ing|al|er)?\b/i.test(b.raw ?? '')),
+  );
+  const out: Critique = structuredClone(c);
+  for (const r of out.recommendations) {
+    if (!mentions(`${r.title}. ${r.rationale}`, DRILLS)) continue;
+    if (!SERVICES_CHECKED.test(r.rationale)) r.rationale = `${r.rationale} ${DRILL_NOTE}`;
+    if (renter && !LANDLORD.test(r.rationale)) r.rationale = `${r.rationale} ${RENTAL_DRILL_NOTE}`;
   }
   return out;
 }

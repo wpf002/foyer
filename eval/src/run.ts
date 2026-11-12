@@ -10,6 +10,7 @@ import {
   briefBlock,
   critiqueRoom,
   critiqueSystemPrompt,
+  enforceDrilling,
   enforceSafety,
   enforceTrades,
   syncSupporting,
@@ -151,7 +152,7 @@ async function runCase(c: GoldenCase): Promise<CaseResult> {
     store(ck, critique);
   }
   // Cached critiques predate enforcement; it's idempotent, so apply it every time.
-  critique = syncSupporting(enforceTrades(enforceSafety(critique)), brief);
+  critique = syncSupporting(enforceDrilling(enforceTrades(enforceSafety(critique)), brief), brief);
 
   const checks = runChecks(critique, brief);
   const { judgement } = await judge(brief, room, critique, checks, USER);

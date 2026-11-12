@@ -169,3 +169,49 @@ test('anti-tip straps are DIY and the rules give no stock phrase to paste', () =
   assert.doesNotMatch(diy, /Say "/);
   assert.doesNotMatch(SAFETY_RULES.join(' '), /vanities or shelves/);
 });
+
+test('taking down a plug-in sconce needs no electrician; a hardwired one does', async () => {
+  const { needsPro } = await import('@foyer/rubric');
+  const pro = (rationale: string) => needsPro({ category: 'FUNCTIONAL', title: 'T', rationale }).pro;
+  assert.ok(!pro('Take down the camper-van sconce and its cord.'));
+  assert.ok(!pro('Remove the plug-in sconce by the bed.'));
+  assert.ok(pro('Remove the hardwired sconce and its cord.'));
+  assert.ok(pro('Take down the ceiling fixture over the bed.'));
+});
+
+test('drilling into a wall gets a wiring check, and renters a landlord check', async () => {
+  const { enforceDrilling, DRILL_NOTE, RENTAL_DRILL_NOTE } = await import('@foyer/rubric');
+  const make = (rationale: string) =>
+    ({
+      roomRead: '',
+      recommendations: [{ category: 'FUNCTIONAL', title: 'Peg Rail', rationale, citation: 'Q07', effort: 'WEEKEND', needsProReview: false }],
+      leaveAlone: [],
+      palette: { colors: [], reasoning: '', citations: [] },
+    }) as unknown as Critique;
+  const rent = [{ questionId: 'Q15', raw: 'Rent', parsed: { tags: ['Renter'], flags: ['renter'] } }] as unknown as BriefEntry[];
+  const own = [{ questionId: 'Q15', raw: 'Own, No HOA', parsed: { tags: ['Owner'], flags: [] } }] as unknown as BriefEntry[];
+
+  const rented = enforceDrilling(make('Screw the rail into two wall studs.'), rent).recommendations[0]!;
+  assert.ok(rented.rationale.includes(DRILL_NOTE) && rented.rationale.includes(RENTAL_DRILL_NOTE));
+  assert.equal(rented.needsProReview, false);
+  assert.deepEqual(enforceDrilling(enforceDrilling(make('Screw the rail into two wall studs.'), rent), rent), enforceDrilling(make('Screw the rail into two wall studs.'), rent));
+
+  const owned = enforceDrilling(make('Screw the rail into two wall studs.'), own).recommendations[0]!;
+  assert.ok(owned.rationale.includes(DRILL_NOTE) && !owned.rationale.includes(RENTAL_DRILL_NOTE));
+
+  const mat = enforceDrilling(make('It lies flat with no fastening to the wall.'), rent).recommendations[0]!;
+  assert.equal(mat.rationale, 'It lies flat with no fastening to the wall.');
+});
+
+test('roomRead budget-fit verdicts become a check against the priced total', async () => {
+  const { enforceSafety } = await import('@foyer/rubric');
+  const c = {
+    roomRead: 'The full set should fit the stated budget (Q13). If it runs over the budget, drop the mat first.',
+    recommendations: [],
+    leaveAlone: [],
+    palette: { colors: [], reasoning: '', citations: [] },
+  } as unknown as Critique;
+  const e = enforceSafety(c);
+  assert.equal(e.roomRead, 'Compare the priced total against the budget (Q13) before buying. If it runs over the budget, drop the mat first.');
+  assert.deepEqual(enforceSafety(e), e);
+});
