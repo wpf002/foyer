@@ -1,5 +1,4 @@
 import { call, type ModelUsage } from '@foyer/ai';
-import { fitBudget, type LowCentsOf } from './budget';
 import { CATEGORIES, EFFORT, type Category, type Effort } from './rubric';
 import type { BriefEntry } from './intake';
 import { briefBlock, critiqueSystemPrompt, roomMessage } from './prompts';
@@ -137,13 +136,7 @@ export interface CritiqueResult {
  * One reasoning-tier call per room. The rubric and the brief are the two
  * cached system blocks; only the room changes between calls on one project.
  */
-export async function critiqueRoom(
-  brief: BriefEntry[],
-  room: RoomInput,
-  userId: string,
-  /** Prices items so the plan can be cut to the Q13 budget. Omit to skip the cut. */
-  lowCentsOf?: LowCentsOf,
-): Promise<CritiqueResult> {
+export async function critiqueRoom(brief: BriefEntry[], room: RoomInput, userId: string): Promise<CritiqueResult> {
   const res = await call<Critique>({
     task: 'design_critique',
     userId,
@@ -158,6 +151,5 @@ export async function critiqueRoom(
   });
   const errs = shapeErrors(res.parsed);
   if (errs.length) throw new Error(`Critique failed shape check: ${errs.join('; ')}`);
-  const enforced = syncSupporting(enforceDrilling(enforceTrades(enforceSafety(res.parsed as Critique)), brief), brief);
-  return { critique: lowCentsOf ? fitBudget(enforced, brief, lowCentsOf) : enforced, model: res.model, usage: res.usage };
+  return { critique: syncSupporting(enforceDrilling(enforceTrades(enforceSafety(res.parsed as Critique)), brief), brief), model: res.model, usage: res.usage };
 }

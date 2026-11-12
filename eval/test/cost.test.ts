@@ -78,3 +78,7 @@ test('small items map to small work types, not doors, furniture or $0', () => {
 test('countOf skips dollar figures', () => {
   assert.equal(s('Get Bags Off The Floor', 'About $25 to $50 for a bin next to the bench.')?.quantity, 1);
 });
+
+test('regrouping seating prices as a rearrange, not a purchase', () => {
+  assert.equal(scopeOf({ title: 'Regroup Seating Around The TV Stand', rationale: 'Pull the stools in.', category: 'FUNCTIONAL' })?.workType, 'rearrange');
+});

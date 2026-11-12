@@ -18,7 +18,7 @@ import {
   type RoomInput,
 } from '@foyer/rubric';
 import { boardOf } from '@foyer/artifacts';
-import { price, readScan, regionFactor, scopeOf } from '@foyer/cost';
+import { readScan, regionFactor } from '@foyer/cost';
 import { priceProject } from '../pricing';
 import { rebuildRoadmap } from '../roadmap';
 
@@ -396,11 +396,7 @@ export async function projectRoutes(app: FastifyInstance) {
       parsed: (a.parsed as unknown as ParsedAnswer | null) ?? { tags: [], flags: [] },
     }));
     const answerId = new Map(brief.answers.map((a) => [a.questionId, a.id]));
-    const lowCentsOf = (rec: { title: string; rationale: string; category: string }) => {
-      const scope = scopeOf({ ...rec, room });
-      return scope ? (price(scope, r.project.zip)?.lowCents ?? null) : null;
-    };
-    const { critique, model, usage } = await critiqueRoom(entries, room, await userId(), lowCentsOf);
+    const { critique, model, usage } = await critiqueRoom(entries, room, await userId());
 
     const kept = critique.recommendations.flatMap((rec, i) => {
       const id = answerId.get(rec.citation.trim().toUpperCase());
