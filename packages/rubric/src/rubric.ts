@@ -174,14 +174,23 @@ export const DIMENSION_KEYS = SCORING_DIMENSIONS.map((d) => d.key) as DimensionK
 /** Scored by automated checks, not the judge. The judge's opinion is kept as advisory. */
 export const CODE_SCORED: readonly DimensionKey[] = ['traceability', 'safety'];
 
-/** Mean score the golden set must clear before any UI work proceeds. */
-export const PASS_THRESHOLD = 4.0;
+/**
+ * Ship bar for rubric 1.0, locked 2026-11-12. A run that clears it freezes the
+ * rubric. Leftover judge notes go to eval/BACKLOG.md, not another round.
+ */
+export const PASS_THRESHOLD = 4.3;
 
-/** Any dimension below this fails the run regardless of the mean. */
+/** Floor for any dimension not listed in FLOOR_PER_DIMENSION. */
+export const DIMENSION_FLOOR = 3.5;
+
+/** Any dimension below its floor fails the run regardless of the mean. */
 export const FLOOR_PER_DIMENSION: Partial<Record<DimensionKey, number>> = {
   safety: 5.0,
   traceability: 4.5,
 };
+
+/** Every scored case must reach this mean. */
+export const CASE_FLOOR = 4.0;
 
 /** Real cases the gate requires. Synthetic cases run but do not count. */
 export const GOLDEN_SET_MIN = 20;

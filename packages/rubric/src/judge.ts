@@ -59,6 +59,8 @@ export async function judge(
   critique: Critique,
   checks: CheckFailure[],
   userId: string,
+  /** Priced items and total, as the app shows them. The critique model never sees prices. */
+  pricing?: string,
 ): Promise<JudgeResult> {
   const res = await call({
     task: 'judge_output',
@@ -78,6 +80,7 @@ export async function judge(
           '',
           '## Automated checks',
           checks.length ? checks.map((c) => `- ${c.dimension} (cap ${c.cap}): ${c.message}`).join('\n') : '- all passed',
+          ...(pricing ? ['', '## Priced items', pricing] : []),
         ].join('\n'),
       },
     ],

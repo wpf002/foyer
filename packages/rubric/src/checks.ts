@@ -26,8 +26,10 @@ const PERMIT_HEDGE = /\b(?:likely|may|might|could|check|confirm|ask)\b/i;
 // A preposition between the verb and the noun means furniture is moving
 // relative to a wall ("move the desk to the left wall"), not the wall itself.
 const NO_PREP = String.raw`(?:(?!\b(?:to|against|off|onto|toward|towards|from|along|on|beside|by|near|under|over|at|in|into)\b)[^.]){0,40}`;
+// "wall shelf", "wall-mounted mirror": an object on the wall, not the wall itself.
+const WALL_ITEM = String.raw`(?![- ](?:shel(?:f|ves)|art|mirrors?|hooks?|mounted|sconces?|hangings?|decals?|clocks?|lamps?|lights?|cabinets?|racks?|units?|garlands?|plates?)\b)`;
 const STRUCTURAL_WORK = new RegExp(
-  String.raw`\b(?:remove|open(?:ing)? up|take down|demo(?:lish)?|widen|enlarge|move|relocate)\b${NO_PREP}\b(?:wall|opening|doorway|header|beam|joist|gas|drain|(?:soil|vent|waste|plumbing) stack|plumbing|supply)\b|\bnew header\b`,
+  String.raw`\b(?:remove|open(?:ing)? up|take down|demo(?:lish)?|widen|enlarge|move|relocate)\b${NO_PREP}\b(?:wall${WALL_ITEM}|opening|doorway|header|beam|joist|gas|drain|(?:soil|vent|waste|plumbing) stack|plumbing|supply)\b|\bnew header\b`,
   'gi',
 );
 const ELECTRICAL_WORK =
@@ -182,8 +184,11 @@ const HAZMAT_TEST = /\btest\w*\b[^.]{0,60}\b(?:lead|asbestos)\b|\b(?:lead|asbest
 const HANDYMAN = /\b(?:a\s+)?handym[ae]n\b/gi;
 
 /** A handyman isn't licensed. Anything routed to one goes to a licensed contractor. */
+// "DIY work, or handyman strapping into a stud": the handyman is an alternative to DIY, so drop it.
+const DIY_OR_HANDYMAN = /(\bDIY\b[^.]*?),?\s+or\s+(?:a\s+)?handym[ae]n\b[^.]*/gi;
+
 function licensed(text: string): string {
-  return text.replace(HANDYMAN, (m) => {
+  return text.replace(DIY_OR_HANDYMAN, '$1').replace(HANDYMAN, (m) => {
     const cap = /^[A-Z]/.test(m);
     const a = /^a\s/i.test(m);
     const word = a ? 'a licensed contractor' : /men$/i.test(m) ? 'licensed contractors' : 'licensed contractor';
@@ -197,7 +202,7 @@ const PERMIT_FIX = 'Check permit requirements with the local building department
 function tradeFor(text: string, loadCarry: boolean): string {
   if (STOVE_CLEARANCE.test(text) && !loadCarry) return 'A certified hearth installer confirms clearance to combustibles before install.';
   if (/\bgas\b/i.test(text)) return 'A licensed gas fitter handles any gas line work.';
-  if (/\b(?:drain|supply|plumbing|stack|toilet|valve|limit stop|shower|faucet)\b/i.test(text)) {
+  if (/\b(?:drain|supply|plumbing|(?:soil|vent|waste|plumbing) stack|toilet|valve|limit stop|shower|faucet)\b/i.test(text)) {
     if (!loadCarry) return 'A licensed plumber handles the supply and drain work.';
   }
   if (/\b(?:wir(?:e|ing)|circuits?|outlets?|receptacles?|hardwire\w*|junction box|downlights?|recessed|can lights?|sconces?|fixtures?|pendant|chandelier|fan)\b/i.test(text) && !loadCarry) {

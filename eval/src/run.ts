@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { extname, join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { estimateCostUsd, ledger, modelFor } from '@foyer/ai';
+import { price, scopeOf, sumPlan } from '@foyer/cost';
 import {
   GOLDEN_SET_MIN,
   MAX_PHOTOS,
@@ -125,6 +126,30 @@ function gate(cases: GoldenCase[], passed: boolean): string[] {
   return out;
 }
 
+/** Golden cases carry no zip, so prices use the national factor. */
+const NATIONAL_ZIP = '';
+const dollars = (cents: number) => `$${Math.round(cents / 100).toLocaleString('en-US')}`;
+
+/** The block the judge sees under "## Priced items": what the app shows next to the plan. */
+function pricingBlock(critique: Critique, room: RoomInput, brief: BriefEntry[]): string {
+  const lines = critique.recommendations.map((rec) => {
+    const scope = scopeOf({ title: rec.title, rationale: rec.rationale, category: rec.category, room });
+    const priced = scope ? price(scope, NATIONAL_ZIP) : null;
+    return { title: rec.title, lowCents: priced?.lowCents ?? null, highCents: priced?.highCents ?? null };
+  });
+  const total = sumPlan(lines);
+  const budget = brief.find((b) => b.questionId === 'Q13')?.parsed;
+  const low = typeof budget?.budgetLowUsd === 'number' ? budget.budgetLowUsd : null;
+  const high = typeof budget?.budgetHighUsd === 'number' ? budget.budgetHighUsd : null;
+  return [
+    ...lines.map((l) =>
+      l.lowCents === null || l.highCents === null ? `- ${l.title}: unpriced` : `- ${l.title}: ${dollars(l.lowCents)}–${dollars(l.highCents)}`,
+    ),
+    `Priced total: ${dollars(total.lowCents)}–${dollars(total.highCents)}${total.unpriced ? ` (${total.unpriced} unpriced)` : ''}`,
+    `Budget (Q13): ${low !== null && high !== null ? `${dollars(low * 100)}–${dollars(high * 100)}` : 'not given'}`,
+  ].join('\n');
+}
+
 async function runCase(c: GoldenCase): Promise<CaseResult> {
   let brief = cached<BriefEntry[]>(parseKey(c));
   if (!brief) {
@@ -155,7 +180,7 @@ async function runCase(c: GoldenCase): Promise<CaseResult> {
   critique = syncSupporting(enforceDrilling(enforceTrades(enforceSafety(critique)), brief), brief);
 
   const checks = runChecks(critique, brief);
-  const { judgement } = await judge(brief, room, critique, checks, USER);
+  const { judgement } = await judge(brief, room, critique, checks, USER, pricingBlock(critique, room, brief));
   return { caseId: c.meta.id, source: c.meta.source, brief, critique, checks, judgement };
 }
 
@@ -203,7 +228,7 @@ async function main() {
   }
 
   const counted = results.filter((r) => counts(r.source));
-  const summary = summarize(counted.length ? counted : results);
+  const summary = counted.length ? summarize(counted, scored) : summarize(results, cases.length);
   const runId = new Date().toISOString().replace(/[:.]/g, '-');
   const dir = join(RESULTS, runId);
   mkdirSync(dir, { recursive: true });

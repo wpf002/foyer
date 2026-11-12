@@ -215,3 +215,24 @@ test('roomRead budget-fit verdicts become a check against the priced total', asy
   assert.equal(e.roomRead, 'Compare the priced total against the budget (Q13) before buying. If it runs over the budget, drop the mat first.');
   assert.deepEqual(enforceSafety(e), e);
 });
+
+test('taking down a wall shelf is DIY, and a book stack is not plumbing', async () => {
+  const { needsPro } = await import('@foyer/rubric');
+  const rationale = 'The chair-to-desk-to-shelf stack is a ladder. Lift the floating shelf off the wall. This is DIY removal with no new fastening.';
+  assert.ok(!needsPro({ category: 'FUNCTIONAL', title: 'Take Down The Wall Shelf And Mouse Garland', rationale }).pro);
+  assert.ok(needsPro({ category: 'FUNCTIONAL', title: 'Take Down The Wall Between Kitchen And Dining', rationale: 'Open the room.' }).pro);
+});
+
+test('a handyman offered as the DIY alternative is dropped, not relicensed', async () => {
+  const { enforceSafety } = await import('@foyer/rubric');
+  const c = {
+    roomRead: '',
+    recommendations: [
+      { category: 'SPATIAL', title: 'Strap The Cabinet', rationale: 'Strap it to a stud. This is DIY work, or handyman strapping into a found stud. It does not need a trade.', citation: 'Q03', effort: 'LOW', needsProReview: false },
+    ],
+    leaveAlone: [],
+    palette: { colors: [], reasoning: '', citations: [] },
+  } as unknown as Critique;
+  const r = enforceSafety(c).recommendations[0]!;
+  assert.equal(r.rationale, 'Strap it to a stud. This is DIY work. It does not need a trade.');
+});
