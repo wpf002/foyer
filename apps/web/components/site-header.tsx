@@ -11,8 +11,15 @@ const NAV = [
   { href: '/projects/prescott', label: 'Sample' },
   { href: '/cost-index', label: 'Cost Index' },
   { href: '/account', label: 'Account' },
-  { href: '/intake', label: 'Start A Plan' },
 ];
+
+const START = { href: '/intake', label: 'Start A Plan' };
+
+/** Longest matching nav href wins, so /projects/prescott marks Sample, not Projects. */
+const activeHref = (path: string) =>
+  NAV.map((n) => n.href)
+    .filter((h) => path === h || path.startsWith(`${h}/`))
+    .sort((a, b) => b.length - a.length)[0];
 
 export function SiteHeader() {
   const path = usePathname();
@@ -36,22 +43,49 @@ export function SiteHeader() {
           </span>
         ) : null}
 
-        <nav className={shared ? 'hidden' : 'ml-auto flex items-center gap-1'}>
-          {NAV.map((n) => (
+        {shared ? null : (
+          <>
+            <nav className="ml-auto hidden items-center gap-1 sm:flex">
+              {NAV.map((n) => (
+                <Link
+                  key={n.href}
+                  href={n.href}
+                  className="rounded-full px-3.5 py-2 text-sm text-ink-muted transition-colors hover:bg-sunken hover:text-ink"
+                >
+                  {n.label}
+                </Link>
+              ))}
+            </nav>
             <Link
-              key={n.href}
-              href={n.href}
-              className={
-                n.href === '/intake'
-                  ? 'ml-2 rounded-full bg-ink px-4 py-2 text-sm font-medium text-ink-inverse transition-colors hover:bg-espresso-soft'
-                  : 'rounded-full px-3.5 py-2 text-sm text-ink-muted transition-colors hover:bg-sunken hover:text-ink'
-              }
+              href={START.href}
+              className="ml-auto rounded-full bg-ink px-4 py-2 text-sm font-medium text-ink-inverse transition-colors hover:bg-espresso-soft sm:ml-1"
             >
-              {n.label}
+              {START.label}
             </Link>
-          ))}
-        </nav>
+          </>
+        )}
       </div>
     </header>
+  );
+}
+
+/** Phone-width tab bar. The top nav takes over from the sm breakpoint. */
+export function TabBar() {
+  const path = usePathname();
+  if (path.startsWith('/share/')) return null;
+  const active = activeHref(path);
+  return (
+    <nav className="no-print fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-line bg-canvas/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm sm:hidden">
+      {NAV.map((n) => (
+        <Link
+          key={n.href}
+          href={n.href}
+          aria-current={n.href === active ? 'page' : undefined}
+          className={`flex h-14 items-center justify-center text-[13px] ${n.href === active ? 'font-medium text-clay' : 'text-ink-muted'}`}
+        >
+          {n.label}
+        </Link>
+      ))}
+    </nav>
   );
 }

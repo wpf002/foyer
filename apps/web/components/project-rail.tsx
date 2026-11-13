@@ -18,21 +18,21 @@ export function ProjectRail({ base, name, subtitle, meta, finishes, budget, nav 
   const path = usePathname();
 
   return (
-    <aside className="no-print lg:sticky lg:top-16 lg:h-[calc(100dvh-4rem)] lg:overflow-y-auto lg:py-12">
+    <aside className="no-print min-w-0 pt-6 lg:sticky lg:top-16 lg:h-[calc(100dvh-4rem)] lg:overflow-y-auto lg:py-12">
       {/* The project's finish board, as a strip across the top of its card. */}
       <div className="card overflow-hidden">
-        <div className="grid h-20 grid-cols-6">
+        <div className="grid h-8 grid-cols-6 lg:h-20">
           {finishes.map((f, i) => (
             <Material key={i} finish={f} className="h-full" />
           ))}
         </div>
-        <div className="p-5">
-          <h1 className="text-[2rem] leading-none">{name}</h1>
+        <div className="p-4 lg:p-5">
+          <h1 className="text-[1.75rem] leading-none lg:text-[2rem]">{name}</h1>
           {subtitle ? <p className="mt-2 text-sm text-ink-muted">{subtitle}</p> : null}
           <p className="mt-0.5 text-sm text-ink-faint">{meta}</p>
 
           {budget ? (
-            <div className="mt-5 rounded-sm bg-brass-soft/70 px-3.5 py-3">
+            <div className="mt-4 rounded-sm bg-brass-soft/70 px-3.5 py-3 lg:mt-5">
               <p className="text-xs font-medium text-brass">Budget</p>
               <span className="mt-0.5 block whitespace-nowrap font-display text-xl tabular-nums text-ink">
                 {budget.label}
@@ -49,7 +49,8 @@ export function ProjectRail({ base, name, subtitle, meta, finishes, budget, nav 
         </div>
       </div>
 
-      <nav className="mt-6 space-y-0.5">
+      {/* Phones get a sideways-scrolling strip so the section's content stays above the fold. */}
+      <nav className="-mx-6 mt-4 flex gap-1 overflow-x-auto px-6 [scrollbar-width:none] lg:mx-0 lg:mt-6 lg:block lg:space-y-0.5 lg:overflow-visible lg:px-0">
         {nav.map((n) => {
           const href = n.seg ? `${base}/${n.seg}` : base;
           const active = n.seg ? path.startsWith(href) : path === base;
@@ -58,7 +59,7 @@ export function ProjectRail({ base, name, subtitle, meta, finishes, budget, nav 
               key={n.title}
               href={href}
               className={cx(
-                'flex items-center justify-between rounded-full px-4 py-2.5 text-[15px] transition-colors',
+                'flex shrink-0 items-center justify-between gap-2 rounded-full px-4 py-2.5 text-[15px] transition-colors',
                 active
                   ? 'bg-ink font-medium text-ink-inverse'
                   : 'text-ink-muted hover:bg-sunken hover:text-ink',

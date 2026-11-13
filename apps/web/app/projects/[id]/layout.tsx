@@ -62,9 +62,9 @@ export default async function ProjectLayout({
   const rail = await railFor(id);
   if (!rail) notFound();
   return (
-    <div className="mx-auto grid max-w-[1240px] gap-10 px-6 lg:grid-cols-[16rem_1fr] lg:gap-16">
+    <div className="mx-auto grid max-w-[1240px] gap-2 px-6 lg:grid-cols-[16rem_1fr] lg:gap-16">
       <ProjectRail base={`/projects/${id}`} {...rail} />
-      <div className="min-w-0 py-12 lg:py-14">{children}</div>
+      <div className="min-w-0 py-8 lg:py-14">{children}</div>
     </div>
   );
 }

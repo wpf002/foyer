@@ -74,6 +74,8 @@ export function AddRoom({ projectId }: { projectId: string }) {
   );
 }
 
+const PHOTO_TYPES = 'image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif';
+
 export function RoomTools({
   roomId,
   photos,
@@ -90,6 +92,17 @@ export function RoomTools({
   const { run, busy, error } = useAction();
   const [uploaded, setUploaded] = useState(0);
   const file = useRef<HTMLInputElement>(null);
+  const camera = useRef<HTMLInputElement>(null);
+
+  const upload = (input: HTMLInputElement) => {
+    const files = Array.from(input.files ?? []);
+    input.value = '';
+    if (!files.length) return;
+    const body = new FormData();
+    files.forEach((f) => body.append('photo', f));
+    setUploaded(0);
+    void run('upload', () => sendWithProgress(`/rooms/${roomId}/photos`, body, setUploaded));
+  };
   const scanFile = useRef<HTMLInputElement>(null);
 
   return (
@@ -98,19 +111,18 @@ export function RoomTools({
         <input
           ref={file}
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
+          accept={PHOTO_TYPES}
           multiple
           hidden
-          onChange={(e) => {
-            const files = Array.from(e.currentTarget.files ?? []);
-            e.currentTarget.value = '';
-            if (!files.length) return;
-            const body = new FormData();
-            files.forEach((f) => body.append('photo', f));
-            setUploaded(0);
-            void run('upload', () => sendWithProgress(`/rooms/${roomId}/photos`, body, setUploaded));
-          }}
+          onChange={(e) => upload(e.currentTarget)}
         />
+        {/* capture opens the rear camera directly; desktops ignore it, so the button only shows on touch screens. */}
+        <input ref={camera} type="file" accept={PHOTO_TYPES} capture="environment" hidden onChange={(e) => upload(e.currentTarget)} />
+        <span className="hidden pointer-coarse:contents">
+          <Button variant="secondary" size="sm" disabled={!!busy} onClick={() => camera.current?.click()}>
+            Take Photo
+          </Button>
+        </span>
         <Button variant="secondary" size="sm" disabled={!!busy} onClick={() => file.current?.click()}>
           {busy === 'upload' ? (uploaded < 1 ? `Uploading ${Math.round(uploaded * 100)}%` : 'Processing…') : 'Add Photos'}
         </Button>
