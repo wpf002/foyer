@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Material } from '@foyer/ui';
 import { AccountForm } from '@/components/account-form';
+import { SignOutButton } from '@/components/auth-form';
 import { api, KIND_LABEL, preparedLine, type ApiMe } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
@@ -14,7 +15,10 @@ export default async function AccountPage() {
     <div className="mx-auto grid max-w-[1240px] gap-12 px-6 py-12 lg:grid-cols-[1fr_22rem] lg:gap-16 lg:py-16">
       <main className="min-w-0">
         <h1 className="text-[clamp(2.75rem,5vw,4rem)]">Account</h1>
-        <p className="mt-3 text-ink-muted">{me.email}</p>
+        <div className="mt-3 flex items-center gap-4">
+          <p className="text-ink-muted">{me.email}</p>
+          <SignOutButton />
+        </div>
         <div className="mt-12 max-w-[40rem]">
           <AccountForm me={me} />
         </div>

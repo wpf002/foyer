@@ -27,16 +27,6 @@ const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 
 export const uploadDir = () => path.resolve(process.env.FOYER_UPLOAD_DIR ?? path.join(process.cwd(), '../../.uploads'));
 
-/** Phase 1 has one local user and no auth. */
-const DEV_EMAIL = 'dev@foyer.local';
-let devUserId: string | undefined;
-export async function userId(): Promise<string> {
-  devUserId ??= (
-    await prisma.user.upsert({ where: { email: DEV_EMAIL }, update: {}, create: { email: DEV_EMAIL, name: 'Dev' } })
-  ).id;
-  return devUserId;
-}
-
 export const bad = (reply: FastifyReply, error: string, status = 400) => reply.code(status).send({ error });
 export const strList = (v: unknown): string[] =>
   Array.isArray(v) ? v.filter((s): s is string => typeof s === 'string' && !!s.trim()).map((s) => s.trim()) : [];
@@ -109,13 +99,13 @@ function conceptOf(r: { id: string; createdAt: Date } | undefined) {
   return r ? { id: r.id, url: `/v1/renders/${r.id}/file`, createdAt: r.createdAt } : null;
 }
 
-export async function ownedProject(id: string) {
-  return prisma.project.findFirst({ where: { id, userId: await userId() }, include: projectInclude });
+export async function ownedProject(id: string, userId: string) {
+  return prisma.project.findFirst({ where: { id, userId }, include: projectInclude });
 }
 
-async function ownedRoom(id: string) {
+async function ownedRoom(id: string, userId: string) {
   return prisma.room.findFirst({
-    where: { id, project: { userId: await userId() } },
+    where: { id, project: { userId } },
     include: { photos: { orderBy: { createdAt: 'asc' } }, project: { include: { brief: { include: { answers: true } } } } },
   });
 }
@@ -146,9 +136,9 @@ export async function projectRoutes(app: FastifyInstance) {
     QUESTIONS.map((q) => ({ id: q.id, section: q.section, prompt: q.prompt, choices: q.choices ? Object.keys(q.choices) : null })),
   );
 
-  app.get('/projects', async () => {
+  app.get('/projects', async (req) => {
     const rows = await prisma.project.findMany({
-      where: { userId: await userId() },
+      where: { userId: req.userId },
       orderBy: { updatedAt: 'desc' },
       include: { brief: { select: { completedAt: true } }, _count: { select: { rooms: true, roadmapItems: true, artifacts: true } } },
     });
@@ -172,12 +162,12 @@ export async function projectRoutes(app: FastifyInstance) {
     const clientName = typeof req.body?.clientName === 'string' ? req.body.clientName.trim().slice(0, 120) || null : null;
     if (!name) return bad(reply, 'name is required');
     if (!zip || !/^\d{5}$/.test(zip)) return bad(reply, 'zip must be 5 digits');
-    const p = await prisma.project.create({ data: { name, zip, clientName, userId: await userId(), brief: { create: {} } } });
+    const p = await prisma.project.create({ data: { name, zip, clientName, userId: req.userId, brief: { create: {} } } });
     return reply.code(201).send({ id: p.id });
   });
 
   app.get<{ Params: { id: string } }>('/projects/:id', async (req, reply) => {
-    const p = await ownedProject(req.params.id);
+    const p = await ownedProject(req.params.id, req.userId);
     if (!p) return bad(reply, 'not_found', 404);
     return serializeProject(p);
   });
@@ -186,7 +176,7 @@ export async function projectRoutes(app: FastifyInstance) {
   app.put<{ Params: { id: string }; Body: { answers?: { questionId: string; raw: string }[] } }>(
     '/projects/:id/brief',
     async (req, reply) => {
-      const p = await ownedProject(req.params.id);
+      const p = await ownedProject(req.params.id, req.userId);
       if (!p?.brief) return bad(reply, 'not_found', 404);
       const answers = req.body?.answers;
       if (!Array.isArray(answers)) return bad(reply, 'answers must be an array');
@@ -219,13 +209,13 @@ export async function projectRoutes(app: FastifyInstance) {
   );
 
   app.post<{ Params: { id: string } }>('/projects/:id/brief/complete', async (req, reply) => {
-    const p = await ownedProject(req.params.id);
+    const p = await ownedProject(req.params.id, req.userId);
     if (!p?.brief) return bad(reply, 'not_found', 404);
     const answers = p.brief.answers;
     if (answers.length < 8) return bad(reply, 'Answer at least 8 questions first');
     const entries = await parseIntake(
       answers.map((a) => ({ questionId: a.questionId, raw: a.raw })),
-      await userId(),
+      req.userId,
     );
     const budget = entries.map((e) => e.parsed).find((x) => x.budgetLowUsd || x.budgetHighUsd);
     await prisma.$transaction([
@@ -249,7 +239,7 @@ export async function projectRoutes(app: FastifyInstance) {
   });
 
   app.post<{ Params: { id: string }; Body: Record<string, unknown> }>('/projects/:id/rooms', async (req, reply) => {
-    const p = await ownedProject(req.params.id);
+    const p = await ownedProject(req.params.id, req.userId);
     if (!p) return bad(reply, 'not_found', 404);
     const b = req.body ?? {};
     const name = typeof b.name === 'string' ? b.name.trim() : '';
@@ -273,7 +263,7 @@ export async function projectRoutes(app: FastifyInstance) {
   });
 
   app.patch<{ Params: { id: string }; Body: Record<string, unknown> }>('/rooms/:id', async (req, reply) => {
-    const r = await ownedRoom(req.params.id);
+    const r = await ownedRoom(req.params.id, req.userId);
     if (!r) return bad(reply, 'not_found', 404);
     const b = req.body ?? {};
     const data: Prisma.RoomUpdateInput = {};
@@ -296,7 +286,7 @@ export async function projectRoutes(app: FastifyInstance) {
 
   // RoomPlan CapturedRoom JSON. Exports run a few hundred KB.
   app.post<{ Params: { id: string }; Body: unknown }>('/rooms/:id/scan', { bodyLimit: 8 * 1024 * 1024 }, async (req, reply) => {
-    const r = await ownedRoom(req.params.id);
+    const r = await ownedRoom(req.params.id, req.userId);
     if (!r) return bad(reply, 'not_found', 404);
     const scan = readScan(req.body);
     if (!scan) return bad(reply, 'No walls in this scan. Export a RoomPlan CapturedRoom JSON.', 422);
@@ -316,7 +306,7 @@ export async function projectRoutes(app: FastifyInstance) {
   });
 
   app.post<{ Params: { id: string } }>('/rooms/:id/photos', async (req, reply) => {
-    const r = await ownedRoom(req.params.id);
+    const r = await ownedRoom(req.params.id, req.userId);
     if (!r) return bad(reply, 'not_found', 404);
     const dir = uploadDir();
     await mkdir(dir, { recursive: true });
@@ -345,7 +335,7 @@ export async function projectRoutes(app: FastifyInstance) {
   });
 
   app.get<{ Params: { id: string } }>('/photos/:id/file', async (req, reply) => {
-    const ph = await prisma.photo.findFirst({ where: { id: req.params.id, room: { project: { userId: await userId() } } } });
+    const ph = await prisma.photo.findFirst({ where: { id: req.params.id, room: { project: { userId: req.userId } } } });
     if (!ph?.storageKey) return bad(reply, 'not_found', 404);
     reply.header('cache-control', 'private, max-age=86400').type(ph.mime ?? 'application/octet-stream');
     return reply.send(createReadStream(path.join(uploadDir(), path.basename(ph.storageKey))));
@@ -353,7 +343,7 @@ export async function projectRoutes(app: FastifyInstance) {
 
   /** Vision read. Fills only blank fields: typed dimensions and text always win. */
   app.post<{ Params: { id: string } }>('/rooms/:id/analyze', async (req, reply) => {
-    const r = await ownedRoom(req.params.id);
+    const r = await ownedRoom(req.params.id, req.userId);
     if (!r) return bad(reply, 'not_found', 404);
     const stored = r.photos.filter((p) => p.storageKey && p.mime && isStoredMime(p.mime));
     if (!stored.length) return bad(reply, 'Upload a photo first');
@@ -363,7 +353,7 @@ export async function projectRoutes(app: FastifyInstance) {
         data: (await readFile(path.join(uploadDir(), path.basename(p.storageKey!)))).toString('base64'),
       })),
     );
-    const { read, model, usage } = await analyzePhotos(photos, toRoomInput(r), await userId());
+    const { read, model, usage } = await analyzePhotos(photos, toRoomInput(r), req.userId);
     const merged = mergeRead(toRoomInput(r), read);
     const now = new Date();
     await prisma.$transaction([
@@ -381,7 +371,7 @@ export async function projectRoutes(app: FastifyInstance) {
 
   /** Critique one room. Each recommendation must map to a stored brief answer or it's dropped. */
   app.post<{ Params: { id: string } }>('/rooms/:id/critique', async (req, reply) => {
-    const r = await ownedRoom(req.params.id);
+    const r = await ownedRoom(req.params.id, req.userId);
     if (!r) return bad(reply, 'not_found', 404);
     const brief = r.project.brief;
     if (!brief?.completedAt) return bad(reply, 'Finish the brief first', 409);
@@ -396,7 +386,7 @@ export async function projectRoutes(app: FastifyInstance) {
       parsed: (a.parsed as unknown as ParsedAnswer | null) ?? { tags: [], flags: [] },
     }));
     const answerId = new Map(brief.answers.map((a) => [a.questionId, a.id]));
-    const { critique, model, usage } = await critiqueRoom(entries, room, await userId());
+    const { critique, model, usage } = await critiqueRoom(entries, room, req.userId);
 
     const kept = critique.recommendations.flatMap((rec, i) => {
       const id = answerId.get(rec.citation.trim().toUpperCase());
@@ -442,9 +432,9 @@ export async function projectRoutes(app: FastifyInstance) {
 
   /** Sequences every recommendation on the project. Replaces the previous roadmap. */
   app.post<{ Params: { id: string } }>('/projects/:id/roadmap', async (req, reply) => {
-    const p = await ownedProject(req.params.id);
+    const p = await ownedProject(req.params.id, req.userId);
     if (!p) return bad(reply, 'not_found', 404);
-    const built = await rebuildRoadmap(p.id, await userId());
+    const built = await rebuildRoadmap(p.id, req.userId);
     if (!built) return bad(reply, 'Critique a room first', 409);
     if (built.notes.length) req.log.info({ projectId: p.id, notes: built.notes }, 'roadmap adjusted');
     const { notes, plan, ...rest } = built;
@@ -453,7 +443,7 @@ export async function projectRoutes(app: FastifyInstance) {
 
   /** Reprices from the baseline and the flywheel. No model call. */
   app.post<{ Params: { id: string } }>('/projects/:id/costs', async (req, reply) => {
-    const p = await ownedProject(req.params.id);
+    const p = await ownedProject(req.params.id, req.userId);
     if (!p) return bad(reply, 'not_found', 404);
     if (!p.roadmapItems.length) return bad(reply, 'Build the roadmap first', 409);
     return priceProject(p.id);
@@ -462,7 +452,7 @@ export async function projectRoutes(app: FastifyInstance) {
   /** A real quote or invoice. Feeds the flywheel per unit. */
   app.post<{ Params: { id: string }; Body: { cents?: unknown; kind?: unknown } }>('/roadmap-items/:id/quote', async (req, reply) => {
     const item = await prisma.roadmapItem.findFirst({
-      where: { id: req.params.id, project: { userId: await userId() } },
+      where: { id: req.params.id, project: { userId: req.userId } },
       include: { project: { select: { zip: true } }, recommendation: { include: { costEstimate: true } } },
     });
     if (!item) return bad(reply, 'not_found', 404);

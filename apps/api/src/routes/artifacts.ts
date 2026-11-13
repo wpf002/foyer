@@ -10,6 +10,7 @@ import {
 } from '@foyer/artifacts';
 import { renderPdf } from '@foyer/artifacts/pdf';
 import { ownedProject, strList } from './projects';
+import { SESSION_COOKIE } from '../auth';
 
 type Owned = NonNullable<Awaited<ReturnType<typeof ownedProject>>>;
 
@@ -74,13 +75,13 @@ const summary = (r: { id: string; type: string; version: number; generatedAt: Da
 
 export async function artifactRoutes(app: FastifyInstance) {
   app.get<{ Params: { id: string } }>('/projects/:id/artifacts', async (req, reply) => {
-    const p = await ownedProject(req.params.id);
+    const p = await ownedProject(req.params.id, req.userId);
     if (!p) return reply.code(404).send({ error: 'Not found' });
     return (await latest(p.id)).map(summary);
   });
 
   app.post<{ Params: { id: string } }>('/projects/:id/artifacts', async (req, reply) => {
-    const p = await ownedProject(req.params.id);
+    const p = await ownedProject(req.params.id, req.userId);
     if (!p) return reply.code(404).send({ error: 'Not found' });
     if (!p.roadmapItems.length) return reply.code(409).send({ error: 'Build the roadmap first' });
 
@@ -101,7 +102,7 @@ export async function artifactRoutes(app: FastifyInstance) {
 
   app.get<{ Params: { id: string; slug: string } }>('/projects/:id/artifacts/:slug', async (req, reply) => {
     const type = typeOfSlug(req.params.slug);
-    const p = type && (await ownedProject(req.params.id));
+    const p = type && (await ownedProject(req.params.id, req.userId));
     if (!type || !p) return reply.code(404).send({ error: 'Not found' });
     const row = await prisma.artifact.findFirst({ where: { projectId: p.id, type }, orderBy: { version: 'desc' } });
     if (!row) return reply.code(404).send({ error: 'Not generated' });
@@ -111,8 +112,13 @@ export async function artifactRoutes(app: FastifyInstance) {
   app.get<{ Params: { id: string; slug: string } }>('/projects/:id/artifacts/:slug/pdf', async (req, reply) => {
     const { id, slug } = req.params;
     if (!typeOfSlug(slug)) return reply.code(404).send({ error: 'Not found' });
-    if (id !== SAMPLE_ID && !(await ownedProject(id))) return reply.code(404).send({ error: 'Not found' });
-    const pdf = await renderPdf(`${webUrl()}/projects/${encodeURIComponent(id)}/artifacts/${slug}?print=1`);
+    if (id !== SAMPLE_ID && !(await ownedProject(id, req.userId))) return reply.code(404).send({ error: 'Not found' });
+    // The print page loads the project through the API, so it needs this request's session.
+    const session = req.cookies[SESSION_COOKIE];
+    const pdf = await renderPdf(
+      `${webUrl()}/projects/${encodeURIComponent(id)}/artifacts/${slug}?print=1`,
+      session ? [{ name: SESSION_COOKIE, value: session }] : [],
+    );
     return reply
       .type('application/pdf')
       .header('content-disposition', `attachment; filename="${slug}.pdf"`)

@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import type { Board } from '@foyer/artifacts';
 import type { Category, Effort, Path, Permit, Phase, Section } from './mock';
 
@@ -183,11 +184,21 @@ export interface ApiShare {
 export const preparedLine = (p: ApiPreparer | null) =>
   p ? [p.studio ?? p.name, p.license ? `Lic. ${p.license}` : null].filter(Boolean).join(' · ') || null : null;
 
+/** Mirrors SESSION_COOKIE in apps/api/src/auth.ts. */
+const SESSION_COOKIE = 'foyer_session';
+
 /** Server-side base. Browser code uses the same-origin /api/v1 rewrite instead. */
 const base = () => `${process.env.API_URL ?? 'http://localhost:4000'}/v1`;
 
 export async function api<T>(path: string): Promise<T | null> {
-  const res = await fetch(`${base()}${path}`, { cache: 'no-store' });
+  // Dynamic so client components can still import this module's types and `send`.
+  const { cookies } = await import('next/headers');
+  const session = (await cookies()).get(SESSION_COOKIE)?.value;
+  const res = await fetch(`${base()}${path}`, {
+    cache: 'no-store',
+    headers: session ? { cookie: `${SESSION_COOKIE}=${session}` } : undefined,
+  });
+  if (res.status === 401) redirect('/signin');
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`API ${res.status} on ${path}`);
   return (await res.json()) as T;

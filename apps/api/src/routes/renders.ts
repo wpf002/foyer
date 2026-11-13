@@ -6,7 +6,7 @@ import type { FastifyInstance } from 'fastify';
 import { prisma, type Prisma } from '@foyer/db';
 import { conceptPrompt, ModelError, publicModelMessage, renderConcept, SpendCapExceeded } from '@foyer/ai';
 import { BOARD_GENERATOR, buildBoard, type Board } from '@foyer/artifacts';
-import { ownedProject, uploadDir, userId } from './projects';
+import { ownedProject, uploadDir } from './projects';
 
 const ANGLE_RANK = ['WIDE', 'CORNER', 'UNKNOWN', 'FLOOR', 'CEILING', 'DETAIL'];
 const EXT: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
@@ -16,7 +16,7 @@ const hashOf = (b: Board) => createHash('sha256').update(JSON.stringify(b)).dige
 export async function renderRoutes(app: FastifyInstance) {
   /** Draw a material board for every recommendation that names a finish or spec. */
   app.post<{ Params: { id: string } }>('/projects/:id/renders', async (req, reply) => {
-    const p = await ownedProject(req.params.id);
+    const p = await ownedProject(req.params.id, req.userId);
     if (!p) return reply.code(404).send({ error: 'Not found' });
     const recs = p.rooms.flatMap((r) => r.recommendations);
     if (!recs.length) return reply.code(409).send({ error: 'Critique a room first' });
@@ -53,7 +53,7 @@ export async function renderRoutes(app: FastifyInstance) {
 
   /** Photoreal concept for one recommendation, edited from the room's widest photo. */
   app.post<{ Params: { id: string } }>('/recommendations/:id/concept', async (req, reply) => {
-    const uid = await userId();
+    const uid = req.userId;
     const rec = await prisma.recommendation.findFirst({
       where: { id: req.params.id, project: { userId: uid } },
       include: { room: { include: { photos: true } } },
@@ -109,7 +109,7 @@ export async function renderRoutes(app: FastifyInstance) {
 
   app.get<{ Params: { id: string } }>('/renders/:id/file', async (req, reply) => {
     const r = await prisma.render.findFirst({
-      where: { id: req.params.id, kind: 'CONCEPT', recommendation: { project: { userId: await userId() } } },
+      where: { id: req.params.id, kind: 'CONCEPT', recommendation: { project: { userId: req.userId } } },
     });
     const key = r?.url.startsWith('foyer:upload/') ? r.url.slice('foyer:upload/'.length) : null;
     if (!r || !key) return reply.code(404).send({ error: 'Not found' });

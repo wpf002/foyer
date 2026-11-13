@@ -33,6 +33,8 @@ enum UserKind {
 model User {
   id        String     @id @default(cuid())
   email     String     @unique
+  /// argon2id. Null for users created before sign-in existed; set one with scripts/set-password.ts.
+  passwordHash String?
   name      String?
   kind      UserKind   @default(HOMEOWNER)
   zip       String?
@@ -42,6 +44,18 @@ model User {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   projects  Project[]
+  sessions  Session[]
+}
+
+/// A signed-in browser. The cookie holds a random token; only its SHA-256 is stored.
+model Session {
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 // ---------------------------------------------------------------------------

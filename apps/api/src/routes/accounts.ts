@@ -3,7 +3,7 @@ import type { FastifyInstance, FastifyReply } from 'fastify';
 import { prisma, type Prisma, type UserKind } from '@foyer/db';
 import { ARTIFACT_TYPES, SLUG, typeOfSlug, type ArtifactDoc } from '@foyer/artifacts';
 import { renderPdf } from '@foyer/artifacts/pdf';
-import { ownedProject, userId } from './projects';
+import { ownedProject } from './projects';
 
 const KINDS: UserKind[] = ['HOMEOWNER', 'DESIGNER', 'CONTRACTOR', 'STAGER', 'AGENT'];
 const bad = (reply: FastifyReply, error: string, status = 400) => reply.code(status).send({ error });
@@ -42,7 +42,7 @@ async function liveShare(token: string) {
 }
 
 export async function accountRoutes(app: FastifyInstance) {
-  app.get('/me', async () => profile(await prisma.user.findUniqueOrThrow({ where: { id: await userId() } })));
+  app.get('/me', async (req) => profile(await prisma.user.findUniqueOrThrow({ where: { id: req.userId } })));
 
   app.patch<{ Body: Record<string, unknown> }>('/me', async (req, reply) => {
     const b = req.body ?? {};
@@ -51,14 +51,14 @@ export async function accountRoutes(app: FastifyInstance) {
     const zip = text(b.zip, 5);
     if (zip && !/^\d{5}$/.test(zip)) return bad(reply, 'zip must be 5 digits');
     const u = await prisma.user.update({
-      where: { id: await userId() },
+      where: { id: req.userId },
       data: { name: text(b.name), kind, zip, studio: text(b.studio), license: text(b.license, 60) },
     });
     return profile(u);
   });
 
   app.patch<{ Params: { id: string }; Body: Record<string, unknown> }>('/projects/:id', async (req, reply) => {
-    const p = await ownedProject(req.params.id);
+    const p = await ownedProject(req.params.id, req.userId);
     if (!p) return bad(reply, 'not_found', 404);
     const name = text(req.body?.name);
     if (name === null) return bad(reply, 'name is required');
@@ -69,7 +69,7 @@ export async function accountRoutes(app: FastifyInstance) {
   /* ---------------------------- Share links ---------------------------- */
 
   app.get<{ Params: { id: string } }>('/projects/:id/shares', async (req, reply) => {
-    const p = await ownedProject(req.params.id);
+    const p = await ownedProject(req.params.id, req.userId);
     if (!p) return bad(reply, 'not_found', 404);
     return prisma.shareLink.findMany({
       where: { projectId: p.id, revokedAt: null },
@@ -79,7 +79,7 @@ export async function accountRoutes(app: FastifyInstance) {
   });
 
   app.post<{ Params: { id: string }; Body: { label?: unknown } }>('/projects/:id/shares', async (req, reply) => {
-    const p = await ownedProject(req.params.id);
+    const p = await ownedProject(req.params.id, req.userId);
     if (!p) return bad(reply, 'not_found', 404);
     if (!(await prisma.artifact.count({ where: { projectId: p.id } }))) return bad(reply, 'Generate the handoff first', 409);
     const link = await prisma.shareLink.create({
@@ -89,7 +89,7 @@ export async function accountRoutes(app: FastifyInstance) {
   });
 
   app.post<{ Params: { id: string } }>('/shares/:id/revoke', async (req, reply) => {
-    const owned = await prisma.shareLink.findFirst({ where: { id: req.params.id, project: { userId: await userId() } } });
+    const owned = await prisma.shareLink.findFirst({ where: { id: req.params.id, project: { userId: req.userId } } });
     if (!owned) return bad(reply, 'not_found', 404);
     await prisma.shareLink.update({ where: { id: owned.id }, data: { revokedAt: new Date() } });
     return { ok: true };

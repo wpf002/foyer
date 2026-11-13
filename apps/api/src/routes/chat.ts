@@ -10,14 +10,14 @@ import {
   type ChatContext,
   type ParsedAnswer,
 } from '@foyer/rubric';
-import { bad, toRoomInput, userId } from './projects';
+import { bad, toRoomInput } from './projects';
 import { rebuildRoadmap, type PlanTotal } from '../roadmap';
 
 const toDollars = (cents: number) => Math.round(cents / 100);
 
-async function chatProject(id: string) {
+async function chatProject(id: string, userId: string) {
   return prisma.project.findFirst({
-    where: { id, userId: await userId() },
+    where: { id, userId },
     include: {
       brief: { include: { answers: { orderBy: { questionId: 'asc' } } } },
       rooms: { orderBy: { createdAt: 'asc' } },
@@ -96,7 +96,7 @@ function writesFor(p: ChatProject, changes: ChatChange[]): Prisma.PrismaPromise<
 
 export async function chatRoutes(app: FastifyInstance) {
   app.get<{ Params: { id: string } }>('/projects/:id/chat', async (req, reply) => {
-    const p = await prisma.project.findFirst({ where: { id: req.params.id, userId: await userId() }, select: { id: true } });
+    const p = await prisma.project.findFirst({ where: { id: req.params.id, userId: req.userId }, select: { id: true } });
     if (!p) return bad(reply, 'not_found', 404);
     return prisma.chatMessage.findMany({
       where: { projectId: p.id },
@@ -111,7 +111,7 @@ export async function chatRoutes(app: FastifyInstance) {
     if (!message) return bad(reply, 'Write a message first');
     if (message.length > CHAT_MESSAGE_MAX_CHARS) return bad(reply, `Keep it under ${CHAT_MESSAGE_MAX_CHARS} characters`);
 
-    const p = await chatProject(req.params.id);
+    const p = await chatProject(req.params.id, req.userId);
     if (!p) return bad(reply, 'not_found', 404);
     if (!p.brief?.completedAt) return bad(reply, 'Finish the brief first', 409);
 
@@ -123,7 +123,7 @@ export async function chatRoutes(app: FastifyInstance) {
     });
     const history = chatHistory(prior, message);
 
-    const { reply: text, changes, usage } = await chatReply(contextOf(p), history, await userId());
+    const { reply: text, changes, usage } = await chatReply(contextOf(p), history, req.userId);
     const writes = writesFor(p, changes);
     const hadRoadmap = writes.length > 0 && (await prisma.roadmapItem.count({ where: { projectId: p.id } })) > 0;
 
@@ -149,7 +149,7 @@ export async function chatRoutes(app: FastifyInstance) {
     let rebuildCostUsd = 0;
     if (hadRoadmap) {
       try {
-        const built = await rebuildRoadmap(p.id, await userId());
+        const built = await rebuildRoadmap(p.id, req.userId);
         plan = built?.plan ?? null;
         rebuildCostUsd = built?.costUsd ?? 0;
       } catch (err) {

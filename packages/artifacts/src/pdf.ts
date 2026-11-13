@@ -19,10 +19,12 @@ export function chromePath(): string {
  * Prints the on-screen artifact route, so the PDF and the page cannot drift.
  * The route hides chrome under @media print.
  */
-export async function renderPdf(url: string): Promise<Uint8Array> {
+/** `cookies` carry the caller's session so the page can load private data. */
+export async function renderPdf(url: string, cookies: { name: string; value: string }[] = []): Promise<Uint8Array> {
   const browser = await puppeteer.launch({ executablePath: chromePath(), headless: true });
   try {
     const page = await browser.newPage();
+    if (cookies.length) await page.setCookie(...cookies.map((c) => ({ ...c, url })));
     const res = await page.goto(url, { waitUntil: 'networkidle0', timeout: 30_000 });
     if (!res?.ok()) throw new Error(`Artifact page returned ${res?.status() ?? 'nothing'}`);
     await page.emulateMediaType('print');

@@ -74,6 +74,10 @@ pnpm dev
 Web runs on 3000, API on 4000. The sample project (`/projects/prescott`) renders from
 `apps/web/lib/mock.ts`. Every other project reads from the API.
 
+Open `/signup` to create an account. Projects made before sign-in existed belong to
+`dev@foyer.local`; give it a password with `pnpm --filter @foyer/api set-password dev@foyer.local`
+and sign in as that user to see them.
+
 ## Environment
 
 Copy `.env.example` to `.env`. Two things to know:
@@ -161,3 +165,5 @@ allowance, and the roadmap reprices on upload. Typing dimensions clears the scan
 | `pnpm db:migrate` | Create and apply a migration |
 | `pnpm db:studio` | Prisma Studio |
 | `pnpm eval` | Run the golden set against the current rubric |
+| `pnpm --filter @foyer/api set-password <email>` | Set a user's password (read from stdin) |
+| `pnpm --filter @foyer/api test` | API unit tests |

@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { ModelError, publicModelMessage, SpendCapExceeded } from '@foyer/ai';
+import { authPlugin } from './auth';
 import { health } from './routes/health';
 import { costRoutes } from './routes/cost';
 import { accountRoutes } from './routes/accounts';
@@ -11,7 +12,8 @@ import { chatRoutes } from './routes/chat';
 
 const app = Fastify({ logger: true });
 
-await app.register(cors, { origin: process.env.WEB_ORIGIN ?? true });
+await app.register(cors, { origin: process.env.WEB_ORIGIN ?? true, credentials: true });
+await app.register(authPlugin);
 
 app.setErrorHandler((err, _req, reply) => {
   if (err instanceof SpendCapExceeded) {
