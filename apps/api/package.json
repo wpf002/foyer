@@ -18,7 +18,7 @@
     "@foyer/cost": "workspace:*",
     "@foyer/db": "workspace:*",
     "@foyer/rubric": "workspace:*",
-    "fastify": "5.2.0"
+    "fastify": "5.12.6"
   },
   "devDependencies": {
     "tsx": "4.19.2"
